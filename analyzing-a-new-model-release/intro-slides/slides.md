@@ -77,7 +77,7 @@ A new model has been released. Great now what?
         - Generally OpenAI and Anthropic will accompany each release with one
         - But the format is not standardized at all
         - If you can't find it, can directly ask a lab for a model card/system
-          card
+          card (and if they don't have one you can ask "why not?")
 + 3rd party evaluation organizations
     * UK AISI/US AISI
     * METR
