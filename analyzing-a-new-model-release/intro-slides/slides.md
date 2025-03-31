@@ -60,9 +60,17 @@ A new model has been released. Great now what?
 
 # Deciphering model numbers
 
++ There's a lot of sloppiness when people talk about AI models
 + "Llama-3 is great"
     * But what exactly is "Llama-3?"
-    * When we go to meta
+    * When we go to Meta's site we get "Llama 3.3 70B" what does that mean?
++ "Llama 3.3 70B is provided only as an instruction-tuned model; a pretrained version is not available."
+    * 3.3 refers to the architecture
+    * 70B refers to the number of "parameters", the same architecture can
+      different number of parameters
+    * Pretrained-only vs fine-tuned/post-trained model
++ Usually when someone says a model is great, they are talking about the largest
+  parameter version of it
 
 # Where should I look for info
 
