@@ -21,12 +21,12 @@ A new model has been released. Great now what?
 
 # Time-based AI benchmarking
 
-+ Time as a measure of difficulty ("t-AGI")
++ Time as a measure of difficulty
     * Can this model do a task that takes a human expert 1 second? 1 minute? 1
       hour?
     * Useful proxy for domain-independent
-+ Increasingly operationalized in various ways
-    * Benchmark suites are annotated with amount of time human experts took to
++ Increasingly used in industry
+    * Benchmarks are annotated with amount of time human experts took to
       complete problem
 + Month-long point seems like threshold for "crazy AI"
     * AI that is capable of doing useful intellectual tasks better than human
