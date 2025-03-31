@@ -58,6 +58,12 @@ A new model has been released. Great now what?
       company vs money made from releasing it
 + This next year is crucial for journalists!
 
+# Deciphering model numbers
+
++ "Llama-3 is great"
+    * But what exactly is "Llama-3?"
+    * When we go to meta
+
 # Where should I look for info
 
 + System card/model card
@@ -65,7 +71,13 @@ A new model has been released. Great now what?
     * *Not* the one provided by HuggingFace or other websites (although those
       can be worth looking at too, they are more tailored to software developers
       and often omit important details)
-    * Note that Google DeepMind often does not provide this (this is bad!)
+    * This is often unfortunately not very standardized and is kind of
+      idiosyncratic and random where a company will put it
+        - E.g. Google DeepMind often does not provide this at all
+        - Generally OpenAI and Anthropic will accompany each release with one
+        - But the format is not standardized at all
+        - If you can't find it, can directly ask a lab for a model card/system
+          card
 + 3rd party evaluation organizations
     * UK AISI/US AISI
     * METR
