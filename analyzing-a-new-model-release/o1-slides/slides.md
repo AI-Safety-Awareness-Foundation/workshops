@@ -9,28 +9,27 @@
 # Questions we want to answer
 
 + How could you have predicted the announcement of o1-preview and o1-mini before September, 2024?
-+ How could you have figured out on December 5th, 2024 that something was amiss with the model?
++ How could you have figured out on December 5th, 2024 that something was unusual with the model?
 + How could you make sense of the o1 announcement?
-    * What information is actually contained in the announcement of the model?
-    * What benchmarks are usually talked about?
-    * How big of a jump in capabilities does o1 actually represent?
+    * What information is contained in the announcement of the model?
+    * What are common benchmarks – and which ones matter?
+    * How big of a jump in capabilities does o1 represent?
     * What sources of information could you go to to understand this?
     * How could you analyze this for yourself?
-    * How surprising is o1?
+    * How surprising is o1? **(J: what does "surprising" mean – seems to do a lot of lifting here?)**
 
 # Why is this a big deal
 
 + Difficult for us to fully replicate OpenAI's testing results!
-+ Seems indicative 
++ Seems indicative **of what?**
 
-# OpenAI is being mildly deceptive about inaccuracy in initial release
-
+# Timeline
 + [https://openai.com/index/openai-o1-system-card/](https://openai.com/index/openai-o1-system-card/) claims updated Dec 5th
     * Not actually true (compare against Wayback Machine)
     * Makes it seem like info about `o1-near-final-checkpoint` was always there
       (it wasn't! Was added after Dec 5th)
 + System card PDF also claims updated Dec 5th
-    * Also not true
+    * Also not true **[J: how do you know this? these are very big claims to make – and we need explore them w/ neutrality/truthseeking attitude; evidence like screenshot of timestamps would be useful]**
 + How would you be able to tell?
 
 # How would you have known?
