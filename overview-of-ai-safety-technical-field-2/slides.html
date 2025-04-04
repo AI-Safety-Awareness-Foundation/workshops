@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title>slides</title>
+  <style type="text/css">
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="https://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="https://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div id="brief-history-of-ai" class="slide section level1">
+<h1>Brief History of AI</h1>
+<ul class="incremental">
+<li>“Old-school” ML
+<ul class="incremental">
+<li>1950s-1960s: first neural nets</li>
+<li>1970s-1980s: rise of symbolic AI</li>
+<li>But things seemed bad leading to big AI winter of 1980s/1990s (also
+arguable happened before)</li>
+</ul></li>
+<li>Inflection point at 2013 with AlexNet
+<ul class="incremental">
+<li>Image recognition</li>
+<li>Deep Learning revolution</li>
+</ul></li>
+</ul>
+</div>
+<div id="characteristics-of-old-school-ml" class="slide section level1">
+<h1>Characteristics of old school ML</h1>
+<ul class="incremental">
+<li>Careful tuning of algorithms</li>
+<li>Feature engineering</li>
+<li>Scale is not everything, in fact scale is counter-productive
+<ul class="incremental">
+<li>Overfitting</li>
+</ul></li>
+<li>Thought we were decades, centuries away from AGI</li>
+</ul>
+</div>
+<div id="overturning-of-old-intuitions-in-late-2010s"
+class="slide section level1">
+<h1>Overturning of old intuitions in late 2010s</h1>
+<ul class="incremental">
+<li>Belkin et al.’s 2019 paper demonstrating double descent
+<ul class="incremental">
+<li>Just make it bigger! We just hadn’t scaled enough!</li>
+</ul></li>
+<li>Almost every intuition of “old-school” ML got thrown out
+<ul class="incremental">
+<li>Old-school: big models overfit the data</li>
+<li>Modern: just make the models even bigger and that goes away!</li>
+<li>Old-school: training too long on the same data overfits that
+data</li>
+<li>Modern: just train even longer and that goes away!</li>
+</ul></li>
+</ul>
+</div>
+<div id="parameter-double-descent" class="slide section level1">
+<h1>Parameter double descent</h1>
+<div class="float">
+<img
+src="./Double_descent_in_a_two-layer_neural_network_(Figure_3a_from_Rocks_et_al._2022).png"
+alt="graph of double descent" />
+<div class="figcaption">graph of double descent</div>
+</div>
+<p>From <a
+href="%22https://commons.wikimedia.org/wiki/File:Double_descent_in_a_two-layer_neural_network_(Figure_3a_from_Rocks_et_al._2022).png%22">here</a></p>
+</div>
+<div id="benchmark-saturation" class="slide section level1">
+<h1>Benchmark saturation</h1>
+<div class="float">
+<img
+src="./Performance_of_AI_models_on_various_benchmarks_from_1998_to_2024.png"
+alt="benchmarks" />
+<div class="figcaption">benchmarks</div>
+</div>
+<p>From <a
+href="%22https://commons.wikimedia.org/wiki/File:Performance_of_AI_models_on_various_benchmarks_from_1998_to_2024.png%22">here</a></p>
+</div>
+<div id="training-a-modern-model" class="slide section level1">
+<h1>Training a modern model</h1>
+<ul class="incremental">
+<li>Pre-training
+<ul class="incremental">
+<li>“Autocomplete”</li>
+<li>Train a model to have “background
+knowledge”/“reflexes”/“intuitions”</li>
+</ul></li>
+<li>Post-training
+<ul class="incremental">
+<li>Make the model actually useful</li>
+<li>Instruction following</li>
+<li>Reasoning</li>
+</ul></li>
+</ul>
+</div>
+<div id="pretraining-breakthrough" class="slide section level1">
+<h1>Pretraining breakthrough</h1>
+<ul class="incremental">
+<li>GPT: Generative Pretrained Transformer
+<ul class="incremental">
+<li>Generative: generates text</li>
+<li>Pretrained: first does a lot of pretraining before training for a
+specific task</li>
+<li>Transformer: most successful sequence-based architecture to
+date</li>
+</ul></li>
+<li>Pretraining is the first hints of generality
+<ul class="incremental">
+<li>Previous AI models were always task-specific</li>
+<li>Lesson of GPT: training on seemingly irrelevant tasks + some tuning
+leads the model to have better performance on specific tasks than
+task-specific training all the way through</li>
+<li>Previous assumption was that training on non-specific tasks was
+“wasted training,” maybe you get to AGI</li>
+</ul></li>
+</ul>
+</div>
+<div id="history-of-models" class="slide section level1">
+<h1>History of models</h1>
+<ul class="incremental">
+<li>GPT-3</li>
+<li>InstructGPT</li>
+<li>Pretraining scaling:
+<ul class="incremental">
+<li>GPT-4</li>
+<li>Claude-3.5</li>
+</ul></li>
+<li>Inference time scaling:
+<ul class="incremental">
+<li>OpenAI o-series</li>
+<li>DeepSeek r-1</li>
+</ul></li>
+</ul>
+</div>
+<div id="implications-of-inference-time-scaling"
+class="slide section level1">
+<h1>Implications of inference time scaling</h1>
+<ul class="incremental">
+<li>Potentially removing the data bottleneck</li>
+<li>Incremental scaling (not big-bang training runs)</li>
+</ul>
+</div>
+<div id="central-question" class="slide section level1">
+<h1>Central Question</h1>
+<ul class="incremental">
+<li>Is scaling all we need (roughly speaking)?
+<ul class="incremental">
+<li>Not quite just throw more compute at it</li>
+</ul></li>
+<li>Do we have any more breakthroughs left?
+<ul class="incremental">
+<li>Everything since GPT has been basically the same thing</li>
+<li>We keep getting gains</li>
+</ul></li>
+</ul>
+</div>
+<div id="what-happens-if-we-dont-have-any-breakthroughs-left"
+class="slide section level1">
+<h1>What happens if we don’t have any breakthroughs left?</h1>
+<ul class="incremental">
+<li>Crazy AI happens very fast</li>
+<li><a
+href="https://ai-2027.com/summary">https://ai-2027.com/summary</a></li>
+</ul>
+</div>
+<div id="what-happens-if-we-do-have-some-breakthroughs-left"
+class="slide section level1">
+<h1>What happens if we do have some breakthroughs left?</h1>
+<ul class="incremental">
+<li>Very unpredictable</li>
+</ul>
+</div>
+<div id="technical-ai-safety" class="slide section level1">
+<h1>Technical AI Safety</h1>
+<ul class="incremental">
+<li>AI Alignment (very broadly overlaps with technical AI safety)</li>
+<li>AI Governance
+<ul class="incremental">
+<li>Not our focus today</li>
+</ul></li>
+</ul>
+</div>
+<div id="the-big-problem-in-technical-ai-safety"
+class="slide section level1">
+<h1>The Big Problem in Technical AI Safety</h1>
+<ul class="incremental">
+<li>“How do we actually make AI systems do what we want?”
+<ul class="incremental">
+<li>What happens when they become broadly more capable than humans?</li>
+</ul></li>
+<li><strong>We don’t know right now</strong>
+<ul class="incremental">
+<li>None of the current approaches are sure bets</li>
+<li>There are reasonable critiques of how each of them might fail</li>
+<li>But we’ve gotta try</li>
+</ul></li>
+</ul>
+</div>
+<div id="why-are-we-concerned-about-ai-safety"
+class="slide section level1">
+<h1>Why are we concerned about AI safety?</h1>
+<ul class="incremental">
+<li>Theoretical arguments
+<ul class="incremental">
+<li>Instrumental Convergence
+<ul class="incremental">
+<li>Everything revolves around power</li>
+<li>As models get more capable might naturally be more
+power-seeking</li>
+</ul></li>
+<li>Inner vs outer alignment</li>
+</ul></li>
+<li>Empirical evidence
+<ul class="incremental">
+<li>Starting to see evidence of deception in the wild
+<ul class="incremental">
+<li>Anthropic’s alignment faking paper</li>
+<li>Unfaithfulness of CoT</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="what-technical-ai-safety-is-generally-not"
+class="slide section level1">
+<h1>What technical AI safety is generally not</h1>
+<p>A + Technical AI safety generally does not concern itself with
+questions of sentience/consciousness * Although there are researchers
+concerned about this (moral personhood of AI agents) + Robots stabbing
+me in the face are equally dangerous whether they’re stochastic parrots
+or not</p>
+</div>
+<div id="different-subfields-of-alignment" class="slide section level1">
+<h1>Different subfields of alignment</h1>
+<p>The big ones:</p>
+<ul class="incremental">
+<li>Mechanistic Interpretability
+<ul class="incremental">
+<li>“Can we read the mind of an AI?”</li>
+</ul></li>
+<li>Model Organisms
+<ul class="incremental">
+<li>“Can we replicate in artificial conditions dangerous scenarios to
+study before those scenarios actually happen?”</li>
+</ul></li>
+<li>Evaluations
+<ul class="incremental">
+<li>“How could we tell if AIs are malicious”</li>
+</ul></li>
+<li>Control
+<ul class="incremental">
+<li>“Can we put in reasonable guardrails even if we have only a blackbox
+understanding of the model?”</li>
+</ul></li>
+</ul>
+</div>
+<div id="mechanistic-interpretability" class="slide section level1">
+<h1>Mechanistic Interpretability</h1>
+<ul class="incremental">
+<li>Cracking open the weights of a model</li>
+<li>If you can turn a model into a whitebox then you can have a very
+strong understanding of what it will or won’t do even in novel
+situations</li>
+<li>Golden Gate Claude</li>
+<li>(if you do ARENA it focuses a lot on mech interp)</li>
+<li>Critiques:
+<ul class="incremental">
+<li>Are we actually on track to get there in time?</li>
+<li>Maybe models are just fundamentally not interpretable!</li>
+</ul></li>
+</ul>
+</div>
+<div id="model-organisms" class="slide section level1">
+<h1>Model Organisms</h1>
+<ul class="incremental">
+<li>A lot of scenario building</li>
+<li>Flesh out more concretely what actual dangers might be + serve as a
+testbed for other alignment techniques</li>
+<li>Critiques:
+<ul class="incremental">
+<li>But are they actually realistic?</li>
+<li>What happens if a model organism breaks out?</li>
+</ul></li>
+<li>AI Alignment Faking paper</li>
+</ul>
+</div>
+<div id="evaluations" class="slide section level1">
+<h1>Evaluations</h1>
+<ul class="incremental">
+<li>Can we come up with robust metrics that</li>
+<li>This gives us advance warning of dangers</li>
+<li>METR reports and ASL-n level evaluations</li>
+<li>Critiques:
+<ul class="incremental">
+<li>But what happens if AI systems sandbag those metrics?</li>
+<li>What do we actually do with the results of those metrics?</li>
+</ul></li>
+<li>(ARENA also has a chapter on this)</li>
+</ul>
+</div>
+<div id="other-subfields-of-alignment" class="slide section level1">
+<h1>Other subfields of alignment</h1>
+<ul class="incremental">
+<li>Agent Foundations
+<ul class="incremental">
+<li>“What does it actually mean for an AI system to be agentic? Are
+there theoretical limiting results?”</li>
+</ul></li>
+<li>Architectural research
+<ul class="incremental">
+<li>“Are there better, safer architectures than the current deep
+learning paradigm?”</li>
+</ul></li>
+<li>Cyborgism
+<ul class="incremental">
+<li>“Can we augment humans with AI systems to better manage AI
+systems?”</li>
+<li>Can be metaphorical or physical</li>
+</ul></li>
+</ul>
+</div>
+<div id="but-ultimately-the-field-is-rapidly-changing"
+class="slide section level1">
+<h1>But ultimately the field is rapidly changing</h1>
+<ul class="incremental">
+<li>These categories are by no means MECE</li>
+<li>The central question remains “how can we make AI systems do what we
+want?”</li>
+</ul>
+</div>
+</body>
+</html>
