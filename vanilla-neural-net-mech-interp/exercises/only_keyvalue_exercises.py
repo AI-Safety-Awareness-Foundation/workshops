@@ -1,172 +1,203 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader, Subset
+import torch.optim as optim
 from torchvision import datasets, transforms
 import numpy as np
-import pandas as pd
-from tqdm import tqdm
+import matplotlib.pyplot as plt
 
-class KeyValueFeedForward(nn.Module):
-    def __init__(self, input_dim, num_memories, output_dim):
-        super().__init__()
-        # keys and values as learnable parameters
-        self.keys   = nn.Parameter(torch.randn(num_memories, input_dim))
-        self.values = nn.Parameter(torch.randn(num_memories, output_dim))
-
-    def forward(self, x):
-        # x: (B, input_dim)
-        attn = F.softmax(x @ self.keys.t(), dim=1)      # (B, M)
-        out  = attn @ self.values                       # (B, output_dim)
-        return out, attn
-
-class MNISTKeyValueNet(nn.Module):
-    def __init__(self, num_memories=64):
-        super().__init__()
+# Define a simple network with 3 layers
+class SimpleNN(nn.Module):
+    def __init__(self):
+        super(SimpleNN, self).__init__()
         self.flatten = nn.Flatten()
-        self.fc1     = nn.Linear(28*28, 128)
-        self.kv_ff   = KeyValueFeedForward(128, num_memories, 64)
-        self.fc2     = nn.Linear(64, 10)
-
+        self.fc1 = nn.Linear(784, 128)  # First layer
+        self.fc2 = nn.Linear(128, 64)   # Second layer
+        self.fc3 = nn.Linear(64, 10)    # Output layer
+        self.relu = nn.ReLU()
+    
     def forward(self, x):
         x = self.flatten(x)
-        h = F.relu(self.fc1(x))            # (B,128)
-        kv_out, attn = self.kv_ff(h)       # (B,64), (B,M)
-        logits = self.fc2(kv_out)          # (B,10)
-        return logits, h, attn
+        x1 = self.relu(self.fc1(x))  # Layer 1 output
+        x2 = self.relu(self.fc2(x1)) # Layer 2 output
+        x3 = self.fc3(x2)            # Final output
+        return x3, x1, x2
 
-epochs      = 5
-batch_size  = 128
-lr          = 1e-3
-num_memories= 64
+def interpret_as_key_value_memory(model):
+    # Extract weights from the model
+    W1 = model.fc1.weight.data  # Shape: [128, 784]
+    W2 = model.fc2.weight.data  # Shape: [64, 128]
+    W3 = model.fc3.weight.data  # Shape: [10, 64]
+    
+    # Layer 1: Keys = W1.T, Values = W2.T
+    keys_layer1 = W1.t()  # Shape: [784, 128]
+    values_layer1 = W2.t()  # Shape: [128, 64]
+    
+    # Layer 2: Keys = W2.T, Values = W3.T
+    keys_layer2 = W2.t()  # Shape: [128, 64]
+    values_layer2 = W3.t()  # Shape: [64, 10]
+    
+    return keys_layer1, values_layer1, keys_layer2, values_layer2
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+def visualize_keys(keys_layer1):
+    plt.figure(figsize=(12, 8))
+    # Reshape first layer keys for visualization (each column is a key)
+    for i in range(min(16, keys_layer1.shape[1])):  # Show first 16 keys
+        key = keys_layer1[:, i].reshape(28, 28)
+        plt.subplot(4, 4, i+1)
+        plt.imshow(key.numpy(), cmap='viridis')
+        plt.axis('off')
+        plt.title(f'Key {i}')
+    plt.tight_layout()
+    plt.show()
 
-# Data
-train_ds = datasets.MNIST(root='.', train=True, download=True,
-                          transform=transforms.ToTensor())
-train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-
-# Model
-model = MNISTKeyValueNet(num_memories=num_memories).to(device)
-opt   = torch.optim.Adam(model.parameters(), lr=lr)
-crit  = nn.CrossEntropyLoss()
-
-# hidden activations (only from first epoch) (idk it didn't work otherwise)
-all_hidden = []
-all_labels = []
-
-model.train()
-for ep in range(1, epochs+1):
-    total_loss = 0.0
-    for x, y in tqdm(train_loader, desc=f"Epoch {ep}"):
-        x, y = x.to(device), y.to(device)
-        opt.zero_grad()
-        logits, h, _ = model(x)
-        loss = crit(logits, y)
-        loss.backward()
-        opt.step()
-        total_loss += loss.item() * x.size(0)
-        # collect only during first epoch
-        if ep == 1:
-            all_hidden.append(h.detach().cpu().numpy())
-            all_labels.append(y.cpu().numpy())
-    print(f"Epoch {ep} Loss: {total_loss/len(train_ds):.4f}")
-
-# Stack activations and labels from first epoch
-hs = np.concatenate(all_hidden, axis=0)  
-ys = np.concatenate(all_labels, axis=0) 
-print("Training complete; collected activations from first epoch.")
-
-# Normalize hidden and keys
-hs_norm = hs / np.linalg.norm(hs, axis=1, keepdims=True)
-keys    = model.kv_ff.keys.detach().cpu()           
-keys_norm = keys / keys.norm(dim=1, keepdim=True)
-
-K = 50  # number of triggers 
-triggers = []
-for k in range(num_memories):
-    sims = hs_norm @ keys_norm[k].numpy()            
-    topk = np.argpartition(-sims, K)[:K]
-    topk_sorted = topk[np.argsort(-sims[topk])]
-    triggers.append({
-        'key_index': k,
-        'trigger_indices': topk_sorted,
-        'trigger_labels': ys[topk_sorted].tolist()
-    })
-print(f"Extracted {K} triggers for each of {num_memories} keys from first epoch activations.")
-
-
-
-
-#Key–Value Agreement
-agreements = []
-train_full = datasets.MNIST(root='.', train=True, download=False,
-                            transform=transforms.ToTensor())
-for rec in triggers:
-    k   = rec['key_index']
-    idxs= rec['trigger_indices']
-    subset = Subset(train_full, idxs)
-    loader = DataLoader(subset, batch_size=batch_size)
-    n_corr = 0; n_tot = 0
-    for x, y in loader:
-        x, y = x.to(device), y.to(device)
-        with torch.no_grad():
-            logits, h, attn = model(x)
-        w_k = attn[:, k].unsqueeze(1)                     # (B,1)
-        v_k = model.kv_ff.values[k].unsqueeze(0)          # (1,64)
-        out_k = w_k * v_k                                 # (B,64)
-        logits_k = model.fc2(out_k)                      # (B,10)
-        preds = logits_k.argmax(dim=1)
-        n_corr += (preds == y).sum().item()
-        n_tot  += y.size(0)
-    agreements.append({'key_index': k,
-                       'agreement': n_corr / n_tot,
-                       'n_triggers': n_tot})
-
-df_agree = pd.DataFrame(agreements)
-print(df_agree.head())
-
-
-#Generate FFN Outputs (Dim / Layer Modes)
-# Choose mode: 'dim' or 'layer'
-mode = 'layer'
-max_samples = 1000  # e.g., first 1000 test examples
-
-test_ds = datasets.MNIST(root='.', train=False, download=True,
-                         transform=transforms.ToTensor())
-if max_samples:
-    test_ds = Subset(test_ds, list(range(max_samples)))
-loader = DataLoader(test_ds, batch_size=batch_size)
-
-records = []
-for sid, (x, y) in enumerate(loader):
-    x, y = x.to(device), y.to(device)
+def find_top_activating_images(model, data_loader, num_keys=5):
+    # Find images that maximally activate specific keys
     with torch.no_grad():
-        logits, h, attn = model(x)
-    B = x.size(0)
-    for b in range(B):
-        for k in range(num_memories):
-            w_k = attn[b, k].item()
-            v_k = model.kv_ff.values[k]
-            if mode == 'dim':
-                for d, vkd in enumerate(v_k):
-                    records.append({
-                        'sample': sid*batch_size + b,
-                        'true_label': y[b].item(),
-                        'key': k,
-                        'dim': d,
-                        'contribution': w_k * vkd.item()
-                    })
-            else:
-                contrib = (w_k * v_k).sum().item()
-                records.append({
-                    'sample': sid*batch_size + b,
-                    'true_label': y[b].item(),
-                    'key': k,
-                    'layer_contribution': contrib
-                })
+        top_activations = [[] for _ in range(num_keys)]
+        top_images = [[] for _ in range(num_keys)]
+        top_labels = [[] for _ in range(num_keys)]
+        
+        for data, labels in data_loader:
+            # Get middle activations
+            _, x1, _ = model(data)
+            
+            # For the first few keys, find top activating images
+            for key_idx in range(num_keys):
+                activations = x1[:, key_idx]
+                values, indices = torch.topk(activations, k=5)
+                
+                for val, idx in zip(values, indices):
+                    top_activations[key_idx].append(val.item())
+                    top_images[key_idx].append(data[idx].squeeze().numpy())
+                    top_labels[key_idx].append(labels[idx].item())
+        
+        # Show top activating images for each key
+        for key_idx in range(num_keys):
+            plt.figure(figsize=(15, 3))
+            plt.suptitle(f'Top activating images for Key {key_idx}')
+            for i in range(5):
+                plt.subplot(1, 5, i+1)
+                plt.imshow(top_images[key_idx][i], cmap='gray')
+                plt.title(f'Digit: {top_labels[key_idx][i]}, Act: {top_activations[key_idx][i]:.2f}')
+                plt.axis('off')
+            plt.show()
 
-# Build DataFrame and show summary
-df_ffn = pd.DataFrame.from_records(records)
-print(df_ffn.head())
+def analyze_key_activations_by_digit(model, data_loader):
+    key_activations_by_digit = {digit: [] for digit in range(10)}
+    
+    with torch.no_grad():
+        for data, labels in data_loader:
+            _, activations, _ = model(data)
+            
+            for i, label in enumerate(labels):
+                digit = label.item()
+                key_activations_by_digit[digit].append(activations[i].numpy())
+    
+    # Average activations for each digit
+    avg_activations = {}
+    for digit, acts in key_activations_by_digit.items():
+        avg_activations[digit] = np.mean(np.vstack(acts), axis=0)
+    
+    # Find top keys for each digit
+    for digit, avg_act in avg_activations.items():
+        top_keys = np.argsort(avg_act)[-5:]  # Top 5 most activated keys
+        print(f"Digit {digit} is most strongly detected by keys: {top_keys}")
+    
+    # Visualize how each digit activates different keys
+    plt.figure(figsize=(12, 8))
+    plt.imshow(np.array([avg_activations[d] for d in range(10)]), aspect='auto', cmap='viridis')
+    plt.colorbar(label='Average activation')
+    plt.xlabel('Key index')
+    plt.ylabel('Digit')
+    plt.yticks(range(10))
+    plt.title('Key activations by digit')
+    plt.show()
+    
+    # Identify keys that might detect circles
+    circular_digits = [0, 6, 8, 9]
+    non_circular_digits = [1, 7]
+    
+    # Average activation for circular vs non-circular digits
+    circular_activation = np.mean([avg_activations[d] for d in circular_digits], axis=0)
+    non_circular_activation = np.mean([avg_activations[d] for d in non_circular_digits], axis=0)
+    
+    # Find keys that respond much more to circular digits
+    diff = circular_activation - non_circular_activation
+    circle_detector_keys = np.argsort(diff)[-5:]
+    
+    print("\nPotential circle detector keys:", circle_detector_keys)
+    return circle_detector_keys
+
+# Main execution
+def run_mnist_key_value_analysis():
+    print("Loading MNIST dataset...")
+    transform = transforms.Compose([transforms.ToTensor()])
+    train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
+    test_dataset = datasets.MNIST('./data', train=False, transform=transform)
+
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1000)
+
+    print("Creating and training the model...")
+    model = SimpleNN()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+    # Training loop
+    for epoch in range(3):  # Just 3 epochs for demonstration
+        for batch_idx, (data, target) in enumerate(train_loader):
+            optimizer.zero_grad()
+            output, _, _ = model(data)
+            loss = criterion(output, target)
+            loss.backward()
+            optimizer.step()
+            
+            if batch_idx % 100 == 0:
+                print(f'Epoch {epoch}, Batch {batch_idx}, Loss: {loss.item():.4f}')
+    
+    print("\nEvaluating model accuracy...")
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for data, target in test_loader:
+            outputs, _, _ = model(data)
+            _, predicted = torch.max(outputs.data, 1)
+            total += target.size(0)
+            correct += (predicted == target).sum().item()
+    
+    print(f'Test Accuracy: {100 * correct / total:.2f}%')
+    
+    print("\nInterpreting the model as key-value memory...")
+    keys_layer1, values_layer1, keys_layer2, values_layer2 = interpret_as_key_value_memory(model)
+    
+    print("\nVisualizing first layer keys (patterns the model is looking for)...")
+    visualize_keys(keys_layer1)
+    
+    print("\nFinding images that strongly activate specific keys...")
+    find_top_activating_images(model, test_loader, num_keys=3)
+    
+    print("\nAnalyzing how different digits activate different keys...")
+    circle_detector_keys = analyze_key_activations_by_digit(model, test_loader)
+    
+    # Demonstrate usage of circle detector keys
+    print("\nDemonstrating circle detection:")
+    with torch.no_grad():
+        # Get a batch of test images
+        for data, labels in test_loader:
+            # Just use the first 10 images for demonstration
+            sample_data = data[:10]
+            sample_labels = labels[:10]
+            
+            # Get activations
+            _, activations, _ = model(sample_data)
+            
+            # Check circle detector activations
+            for i in range(10):
+                circle_activation = np.mean([activations[i, key].item() for key in circle_detector_keys])
+                has_circle = "Likely has circles" if circle_activation > 0.5 else "Likely no circles"
+                print(f"Image {i}, Digit {sample_labels[i].item()}: {has_circle} (avg activation: {circle_activation:.2f})")
+            
+            break  # Just one batch
+
+if __name__ == "__main__":
+    run_mnist_key_value_analysis()
