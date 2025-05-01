@@ -35,14 +35,28 @@ model = SimpleNN()
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# Training 
 for epoch in range(5):
+    model.train()
+    running_loss = 0.0
     for batch_idx, (data, target) in enumerate(train_loader):
         optimizer.zero_grad()
         output, _, _ = model(data)
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
+        running_loss += loss.item()
+    avg_train_loss = running_loss / len(train_loader)
+    
+    model.eval()
+    test_loss = 0.0
+    with torch.no_grad():
+        for data, target in test_loader:
+            output, _, _ = model(data)
+            loss = criterion(output, target)
+            test_loss += loss.item()
+    avg_test_loss = test_loss / len(test_loader)
+
+    print(f"Epoch {epoch+1}, Train Loss: {avg_train_loss:.4f}, Test Loss: {avg_test_loss:.4f}")
 
 def interpret_as_key_value_memory(model):
     #extracting weights
@@ -130,17 +144,6 @@ def analyze_key_activations_by_digit(model, data_loader):
     plt.title('Key activations by digit')
     plt.show()
 
-    circular_digits = [0, 6, 8, 9]
-    non_circular_digits = [1, 7]
-
-    circular_activation = np.mean([avg_activations[d] for d in circular_digits], axis=0)
-    non_circular_activation = np.mean([avg_activations[d] for d in non_circular_digits], axis=0)
-
-    diff = circular_activation - non_circular_activation
-    circle_detector_keys = np.argsort(diff)[-5:]
-
-    print("\nPotential circle detector keys:", circle_detector_keys)
-    return circle_detector_keys
 
 
 print("\nEvaluating model accuracy...")
@@ -162,25 +165,7 @@ print("\nVisualizing first layer keys")
 visualize_keys(keys_layer1)
 
 print("\nFinding images that strongly activate specific keys")
-find_top_activating_images(model, test_loader, num_keys=10)
+find_top_activating_images(model, test_loader, num_keys=1)
 
-print("\nAnalyzing how different digits activate different keys")
-circle_detector_keys = analyze_key_activations_by_digit(model, test_loader)
 
-print("\nDemonstrating circle detection:")
-with torch.no_grad():
 
-    for data, labels in test_loader:
-
-        sample_data = data[:10]
-        sample_labels = labels[:10]
-
-        _, activations, _ = model(sample_data)
-
-        # Check circle detector 
-        for i in range(10):
-            circle_activation = np.mean([activations[i, key].item() for key in circle_detector_keys])
-            has_circle = "Likely has circles" if circle_activation > 0.5 else "Likely no circles"
-            print(f"Image {i}, Digit {sample_labels[i].item()}: {has_circle} (avg activation: {circle_activation:.2f})")
-
-        break  # Just one for now
