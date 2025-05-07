@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ChatWindow.css';
 import Message from './Message';
-import Anthropic from '@anthropic-ai/sdk';
+import { Anthropic } from '@anthropic-ai/sdk';
 
 const ChatWindow = () => {
   const [messages, setMessages] = useState([
@@ -25,9 +25,23 @@ const ChatWindow = () => {
   const [apiKeyMissing, setApiKeyMissing] = useState(!API_KEY);
   
   // Create Anthropic client if API key is available
-  const anthropic = API_KEY ? new Anthropic({
-    apiKey: API_KEY,
-  }) : null;
+  const anthropicRef = useRef(null);
+  
+  // Initialize the Anthropic client on mount
+  useEffect(() => {
+    if (API_KEY) {
+      try {
+        anthropicRef.current = new Anthropic({
+          apiKey: API_KEY,
+          dangerouslyAllowBrowser: true,
+        });
+        console.log("Anthropic client initialized successfully");
+      } catch (error) {
+        console.error("Error initializing Anthropic client:", error);
+        setApiKeyMissing(true);
+      }
+    }
+  }, [API_KEY]);
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -81,9 +95,10 @@ const ChatWindow = () => {
       
       // Add debug statement for API key
       console.log("API key first 4 chars:", API_KEY ? API_KEY.substring(0, 4) + "..." : "missing");
+      console.log("Anthropic client initialized:", !!anthropicRef.current);
       
       // Local fallback mode for testing
-      const useFallbackMode = !API_KEY || API_KEY === "YOUR_ANTHROPIC_API_KEY";
+      const useFallbackMode = !anthropicRef.current;
       
       if (useFallbackMode) {
         console.log("Using fallback mode (no API call)");
@@ -148,6 +163,10 @@ const ChatWindow = () => {
     // which would then securely call the Anthropic API
     // This direct frontend implementation is for demonstration purposes only
     try {
+      if (!anthropicRef.current) {
+        throw new Error("Anthropic client is not initialized");
+      }
+      
       // Add debugging logs
       console.log("Sending message to Claude. API Key exists:", !!API_KEY);
       console.log("Conversation history:", JSON.stringify(conversationHistory.current));
@@ -162,9 +181,9 @@ const ChatWindow = () => {
         "For demonstration purposes, explain AI safety concepts when relevant. " +
         "Never assist with illegal activities or harmful plans.";
       
-      // Simplified API call to reduce potential issues
-      const response = await anthropic.messages.create({
-        model: "claude-3-7-sonnet-20250201", // Using Claude 3.7 Sonnet
+      // Simplified API call using the updated SDK structure
+      const response = await anthropicRef.current.messages.create({
+        model: "claude-3-7-sonnet-20250219", // Using Claude 3.7 Sonnet
         max_tokens: 1000,
         messages: conversationHistory.current,
         system: systemPrompt
