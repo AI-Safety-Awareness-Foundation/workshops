@@ -39,6 +39,33 @@ From [here]("https://commons.wikimedia.org/wiki/File:Double_descent_in_a_two-lay
 
 From [here]("https://commons.wikimedia.org/wiki/File:Performance_of_AI_models_on_various_benchmarks_from_1998_to_2024.png")
 
+# Accelerating Progress
+
++ Progress in AI has been fast
++ Nonetheless, progress in AI over the last four months has *exceeded already high expectations*
++ 
+
+# Overanthropomorphizing a model
+
++ Think of modern models like Memento's main character
+
+# Underanthropomorphizing a model
+
++ Modern AI systems function much like human bureaucracies and suffer many of
+  the same problems
+    - Principal agent problem
++ Historically, intuitions that focus purely on systems as "generalized Markov
+  models" have significantly miscalibrated predictions
+    - Similar to thinking about the internet as snail mail over the wire
+        * Predictions from Clifford Stoll (one of the godfathers of the modern
+          Internet)
+        * "The truth is no online database will replace your daily [paper] newspaper"
+        * "And you can’t tote that laptop to the beach. Yet Nicholas Negroponte, director of the MIT Media Lab, predicts that we’ll soon buy books and newspapers straight over the Internet. Uh, sure."
+        
++ Anthropomorphizing is not rigorous and is only suitable as a source of
+  intuitions for research programs, many AI safety fields such as mech interp
+  seek to discard it fairly early after the intuition stage
+
 # Training a modern model
 
 + Pre-training
@@ -95,13 +122,17 @@ From [here]("https://commons.wikimedia.org/wiki/File:Performance_of_AI_models_on
 
 # What happens if we do have some breakthroughs left?
 
-+ Very unpredictable
++ Very unpredictable!
++ Might have 
 
 # Technical AI Safety
 
 + AI Alignment (very broadly overlaps with technical AI safety)
 + AI Governance
     * Not our focus today
+    * But very important!
+    * In particular, the question of "who does the AI align with is very
+      important!"
 
 # The Big Problem in Technical AI Safety
 
@@ -178,6 +209,13 @@ The big ones:
     * But what happens if AI systems sandbag those metrics?
     * What do we actually do with the results of those metrics?
 + (ARENA also has a chapter on this)
+
+# Control
+
++ Can we build reliable systems out of unreliable parts?
++ Even if we can't understand what an AI system is doing can we scaffold systems
+  in ways to leverage
++ Leveraging a lot
 
 # Other subfields of alignment
 
