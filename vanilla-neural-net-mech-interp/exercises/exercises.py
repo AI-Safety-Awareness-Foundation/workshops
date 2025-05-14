@@ -260,19 +260,7 @@ for model in models:
 
 def accuracy_by_digit(model, loader):
   # TODO: Implement this!
-  #raise NotImplementedError()
-  correct = [0] * 10
-  total = [0] * 10
-  with torch.no_grad():
-    for data, target_probs in loader:
-      output_probs = model(data)
-      output = output_probs.argmax(dim=1)
-      target = target_probs.argmax(dim=1)
-      for i in range(target.shape[0]):
-        total[target[i]] += 1
-        if output[i] == target[i]:
-          correct[target[i]] += 1
-  return [correct[i] / total[i] for i in range(10)]
+  raise NotImplementedError()
 
 # %%
 
@@ -292,13 +280,11 @@ accuracy_by_digit(models[0], test_loader)
 
 def pull_out_ith_key(model, i):
   # TODO: Implement this (it should be just one line)
-  # raise NotImplementedError()
-  return model.fc1.weight[i]
+  raise NotImplementedError()
 
 def pull_out_ith_value(model, i):
   # TODO: Implement this (again should just be one line)
-  # raise NotImplementedError()
-  return model.fc2.weight[:, i]
+  raise NotImplementedError()
 
 # Test code to make sure your code works!
 assert_tensors_within_epsilon(expected=torch.arange(1568, 2352), actual=pull_out_ith_key(example_simple_nn, 2))
@@ -451,7 +437,7 @@ for idx in indices_that_fire_mainly_on_select_digit[:3]:
 # TODO: Look at the results and what they tell you. Talk with your partner or
 # group about what you're seeing. Once you've done that, delete this
 # NotImplementedError and move on.
-# raise NotImplementedError()
+raise NotImplementedError()
 
 # %%
 
