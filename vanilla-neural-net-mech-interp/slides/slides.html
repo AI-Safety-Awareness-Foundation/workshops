@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title>slides</title>
+  <style type="text/css">
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="https://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="https://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div id="mechanistic-interpretability-vanilla-neural-nets"
+class="slide section level1">
+<h1>Mechanistic Interpretability (Vanilla Neural Nets)</h1>
+<ul class="incremental">
+<li>Assuming you know what a neural net is</li>
+<li>What is mechanistic interpretability?
+<ul class="incremental">
+<li>Interpretability: trying to find a way</li>
+<li>Mechanistic: finding the specific, concrete mechanisms used
+<ul class="incremental">
+<li>Ideally you could drill down to the per-neuron level</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="common-themes-of-mechanistic-interpretability"
+class="slide section level1">
+<h1>Common themes of mechanistic interpretability</h1>
+<ul class="incremental">
+<li>Finding mathematically equivalent or near-equivalent restructuring
+of an architecture</li>
+<li>Proving causality</li>
+<li>Analyzing exactly how our model processes images!</li>
+</ul>
+</div>
+<div id="our-object-of-study" class="slide section level1">
+<h1>Our object of study</h1>
+<ul class="incremental">
+<li>Vanilla neural net (single hidden layer)</li>
+<li>Much simpler than modern LLMs</li>
+<li>But still complex enough to demonstrate the fundamental themes of
+mech interp</li>
+</ul>
+</div>
+<div id="what-youll-be-able-to-do-at-the-end-of-the-day"
+class="slide section level1">
+<h1>What you’ll be able to do at the end of the day</h1>
+<ul class="incremental">
+<li>Get a new look at the traditional vanilla neural net
+architecture</li>
+<li>Thoroughly and mechanistically explain why the NN gets certain
+digits wrong</li>
+</ul>
+</div>
+<div
+id="standard-way-of-thinking-about-a-standard-single-hidden-layer-nn"
+class="slide section level1">
+<h1>Standard way of thinking about a standard single hidden layer
+NN</h1>
+<ul class="incremental">
+<li>There are two (three if you count inputs as neurons) layers of
+neurons</li>
+<li>We pass iteratively from one layer to the next</li>
+<li>Therefore to understand why</li>
+</ul>
+</div>
+<div id="diagram-of-standard-neural-net" class="slide section level1">
+<h1>Diagram of standard neural net</h1>
+<p><img src="./neural-net.svg"/></p>
+</div>
+<div id="standard-layer-by-layer-decomposition"
+class="slide section level1">
+<h1>Standard layer by layer decomposition</h1>
+<p><img src="./neural-net-layer-decomposition.svg" width="500px"/></p>
+</div>
+<div id="alternative-decomposition" class="slide section level1">
+<h1>Alternative decomposition</h1>
+<p><img src="./neural-net-key-value-decomposition.svg" width="700px"/></p>
+</div>
+<div id="calculate-as-key-value-decomposition"
+class="slide section level1">
+<h1>Calculate as “key-value” decomposition</h1>
+<p><img src="./neural-net-key-value-calculation.svg" width="500px"/></p>
+</div>
+<div id="concrete-example" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-0.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-1" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-1.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-2" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-2.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-3" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-3.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-4" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-4.svg" width="700px"/></p>
+</div>
+</body>
+</html>
