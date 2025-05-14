@@ -10,8 +10,17 @@ import einops
 
 # %%
 
+# None of this is code that you will need to write, but you should read this
+# over to understand the structure of what kind of nets we'll be training.
+#
+# Note that we only train with 10,000 images out of the 60,000 image dataset!
+# Originally this was because I was hoping to demonstrate some interesting
+# double descent phenomena, but unfortunately I ran out of time to do that :(.
+# Nonetheless, as we'll see, 10,000 images in the train set is actually enough
+# to get to a very well trained neural net!
+
 # hyper-params
-BATCH_SIZE = 20000
+BATCH_SIZE = 512
 TRAIN_SET_SIZE = 10000
 HIDDEN_DIM = 256
 EPOCHS = 5000
@@ -41,6 +50,27 @@ class SimpleNN(nn.Module):
         return self.softmax(x2)
 
 
+# %%
+
+# This is useful for creating reproducible tests for whether you wrote the code
+# correctly!
+EXAMPLE_SIMPLE_NN_HIDDEN_DIM = 6
+example_simple_nn = SimpleNN(EXAMPLE_SIMPLE_NN_HIDDEN_DIM)
+
+# We'll hard-code all of these values so that they are reproducible for tests
+with torch.no_grad():
+  fc1_weights = einops.rearrange(torch.arange(784 * EXAMPLE_SIMPLE_NN_HIDDEN_DIM), "(x y) -> x y", x=EXAMPLE_SIMPLE_NN_HIDDEN_DIM, y=784)
+  fc1_bias = torch.arange(EXAMPLE_SIMPLE_NN_HIDDEN_DIM)
+  fc2_weights = einops.rearrange(torch.arange(10 * EXAMPLE_SIMPLE_NN_HIDDEN_DIM), "(x y) -> x y", x=10, y=EXAMPLE_SIMPLE_NN_HIDDEN_DIM)
+  fc2_bias = torch.arange(10)
+  example_simple_nn.fc1.weights = torch.nn.Parameter(fc1_weights.to(torch.float))
+  example_simple_nn.fc1.bias = torch.nn.Parameter(fc1_bias.to(torch.float))
+  example_simple_nn.fc2.weights = torch.nn.Parameter(fc2_weights.to(torch.float))
+  example_simple_nn.fc2.bias = torch.nn.Parameter(fc2_bias.to(torch.float))
+
+# %%
+
+
 # MNIST dataset
 transform = transforms.Compose([transforms.ToTensor()])
 train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
@@ -49,10 +79,13 @@ test_dataset = datasets.MNIST('./data', train=False, transform=transform)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=10000)
 
-hidden_dims = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144]
+hidden_dims = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072]
 models = [SimpleNN(hidden_dim) for hidden_dim in hidden_dims]
 
 # %%
+
+# This is code that you can read if you'd like, but can also just run. It's
+# mainly useful if you wanted to train these models yourself.
 
 if LOAD_EVERYTHING_INTO_GPU_MEMORY:
   # We'll load into memory to make this faster
@@ -95,13 +128,21 @@ if LOAD_EVERYTHING_INTO_GPU_MEMORY:
 
 # %%
 
+# This is the actual training loop! Even though this is not code you will need
+# to write, you should definitely read this! It's good to understand exactly how
+# our model is being trained!
+#
+# You might notice that we're using MSELoss instead of cross-entropy loss. It
+# turns out that this is enough to get quite reasonable models and considerably
+# simplifies some of the presentataion to people who have only an introductory
+# understanding of neural nets.
+
 train_losses = []
 test_losses = []
 train_accuracies = []
 test_accuracies = []
 for model in models:
     print(f"Processing hidden_dim {model.hidden_dim}")
-    # Initialize
     criterion = nn.MSELoss()
     optimizer = optim.AdamW(model.parameters(), lr=LR)
 
@@ -174,6 +215,8 @@ if TRAIN_FROM_SCRATCH:
     torch.save(model.state_dict(), f"mnist_model_hidden_layer_{dim}")
 
 # %%
+
+# Go ahead and run this just to make sure
 
 for model in models:
   model = model.to(DEVICE)
