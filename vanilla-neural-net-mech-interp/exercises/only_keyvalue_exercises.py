@@ -144,6 +144,13 @@ def analyze_key_activations_by_digit(model, data_loader):
     plt.title('Key activations by digit')
     plt.show()
 
+def key_values_for_ith_kv_pair(model, i):
+    keys = model[i]
+
+
+def visualize_key_values_for_ith_kv_pair(model, i: int):
+    keys = model
+
 
 
 print("\nEvaluating model accuracy...")

@@ -1,7 +1,7 @@
 with import <nixpkgs> { };
 
 let
-  pythonPackages = python312Packages; # Change to Python 3.12
+  pythonPackages = python311Packages;
 in pkgs.mkShell rec {
   name = "impurePythonEnv";
   venvDir = "./.venv";
@@ -21,7 +21,8 @@ in pkgs.mkShell rec {
     pythonPackages.numpy
     pythonPackages.pandas
     pythonPackages.requests
-    pythonPackages.torchWithCuda
+    pythonPackages.torch
+    pythonPackages.torchvision
     pythonPackages.ale-py
     pythonPackages.pyside6
 
