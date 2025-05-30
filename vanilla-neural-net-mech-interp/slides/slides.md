@@ -1,14 +1,14 @@
 # Mechanistic Interpretability (Vanilla Neural Nets)
 
-+ Assuming you know what a neural net is
++ Assume you know what a neural net is
 + What is mechanistic interpretability?
-    - Interpretability: trying to find a way
+    - Interpretability: trying to find a way to understand something
     - Mechanistic: finding the specific, concrete mechanisms used
         * Ideally you could drill down to the per-neuron level
 
 # Common themes of mechanistic interpretability
 
-+ Finding mathematically equivalent or near-equivalent restructuring of an
++ Finding mathematically equivalent or near-equivalent restructurings of an
   architecture
 + Proving causality
 + Analyzing exactly how our model processes images!
@@ -17,14 +17,14 @@
 
 + Vanilla neural net (single hidden layer)
 + Much simpler than modern LLMs
-+ But still complex enough to demonstrate the fundamental themes of mech interp
++ But still complex enough to demonstrate the fundamental themes of mechanistic interpretability
 
 # What you'll be able to do at the end of the day
 
 + Get a new look at the traditional vanilla neural net architecture
-+ Thoroughly and mechanistically explain why the NN gets certain digits wrong
++ Thoroughly and mechanistically explain why the NN gets certain digits wrong (and right)
 
-# Standard way of thinking about a standard single hidden layer NN
+# Standard way of thinking about a single hidden layer NN
 
 + There are two (three if you count inputs as neurons) layers of neurons
 + We pass iteratively from one layer to the next
