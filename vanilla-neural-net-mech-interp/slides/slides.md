@@ -5,13 +5,14 @@
     - Interpretability: trying to find a way to understand something
     - Mechanistic: finding the specific, concrete mechanisms used
         * Ideally you could drill down to the per-neuron level
++ We want to delve into the black box
 
 # Common themes of mechanistic interpretability
 
 + Finding mathematically equivalent or near-equivalent restructurings of an
   architecture
 + Proving causality
-+ Analyzing exactly how our model processes images!
++ Here, we are analyzing exactly how our model processes images!
 
 # Our object of study
 
@@ -38,7 +39,7 @@
 
 <img src="./neural-net-layer-decomposition.svg" width="500px"/>
 
-# Alternative decomposition
+# Alternative decomposition: key-value
 
 <img src="./neural-net-key-value-decomposition.svg" width="700px"/>
 
