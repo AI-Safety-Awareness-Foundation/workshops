@@ -297,11 +297,13 @@ assert_tensors_within_epsilon(
 
 # This is all a lot of visualization code which you can either read or just run.
 
+#plots the image
 def visualize_image(image):
   plt.imshow(image.detach().numpy(), cmap='viridis')
   plt.axis('off')
   plt.show()
 
+#plots the heatmap of a key
 def visualize_ith_key(model, i):
   key = pull_out_ith_key(model, i).reshape(28, 28)
   key_bias = model.fc1.bias[i]
@@ -310,6 +312,7 @@ def visualize_ith_key(model, i):
   plt.title(f'Key {i} (bias: {key_bias})')
   plt.show()
 
+#plots a heatmap of a value
 def visualize_ith_value(model, i):
   value = pull_out_ith_value(model, i).unsqueeze(0)
   plt.imshow(value.detach().numpy(), cmap='viridis')
@@ -319,6 +322,7 @@ def visualize_ith_value(model, i):
   plt.title(f'Value {i}')
   plt.show()
 
+#visualizes the global value bias for each digit, or the baseline before any interactions
 def visualize_value_bias(model):
   value = model.fc2.bias.unsqueeze(0)
   plt.imshow(value.detach().numpy(), cmap='viridis')
@@ -328,11 +332,13 @@ def visualize_value_bias(model):
   plt.title(f'Global value bias')
   plt.show()
 
+#combines the above 3 visualization functions
 def visualize_ith_key_value(model, i):
   visualize_ith_key(model, i)
   visualize_ith_value(model, i)
   visualize_value_bias(model)
 
+#Shows most influential interaction areas between an image and key 
 def visualize_element_wise_multi_of_key_image(model, i, image):
   key = model.fc1.weight[i].reshape(28, 28)
   element_wise_multi = key * image
@@ -342,6 +348,7 @@ def visualize_element_wise_multi_of_key_image(model, i, image):
   plt.show()
   print(f"Dot-Product: {torch.sum(element_wise_multi)}")
 
+#combines all of the above visualization functions
 def visualize_ith_key_value_on_image(model, i, image):
   visualize_ith_key_value(model, i)
   visualize_element_wise_multi_of_key_image(model, i, image)
@@ -492,7 +499,7 @@ x = torch.tensor([1, 4, 2, 3, 1], dtype=torch.float)
 indices = top_indices_by_tail_sum(x, threshold=4)
 print(f"{indices=}")  # tensor([1, 3])
 
-
+#returns the most influential key-value pairs for an image
 def list_top_kv_pair_idxs(model, input_image, excess_abs_weight=500):
   _, output_after_values = compute_kv_outputs_for_image(model, input_image)
   abs_values = einops.einsum(torch.abs(output_after_values), "digits num_of_values -> num_of_values")
@@ -501,7 +508,7 @@ def list_top_kv_pair_idxs(model, input_image, excess_abs_weight=500):
 
 # %%
 
-# Let's prove to ourselves that the key-value paradigm of calculating things actually is equal to
+# Let's prove to ourselves that the key-value paradigm of calculating things is equal to the normal layer-by-layer interpretation
 def sanity_check_kv_outputs(model, input_image):
   _, output_after_values = compute_kv_outputs_for_image(model, input_image)
   output_plus_bias = einops.einsum(output_after_values, "digits num_of_values -> digits") + model.fc2.bias
@@ -514,7 +521,6 @@ sanity_check_kv_outputs(models[14], train_dataset[0][0].cpu())
 # %%
 
 # This will list the key-value pairs that write the value vectors with the largest magnitude.
-# This is a proxy for 
 list_top_kv_pair_idxs(models[14], train_dataset[0][0].cpu(), 7000)
 
 # %%
@@ -527,6 +533,7 @@ visualize_ith_key_value_on_image(models[14], 14219, train_dataset[0][0].cpu().sq
 
 # %%
 
+#finds the most variable key-value pairs
 def sort_by_value_variance(model, input_image):
   _, output_after_values = compute_kv_outputs_for_image(model, input_image)
   print(f"{torch.var(output_after_values, dim=-1, keepdim=True).shape=}")
@@ -543,6 +550,7 @@ visualize_ith_key_value_on_image(models[14], 22650, train_dataset[0][0].cpu().sq
 
 # %%
 
+#finds key-value pairs that react almost only to one digit
 def find_values_with_mostly_zeroes(model):
   values = model.fc2.weight
   num_of_elems_close_to_0 = torch.abs(values) < 0.05
@@ -648,6 +656,7 @@ def delete_by_index(x: torch.Tensor, indices, dim: int = 0):
 
     return x[mask] if dim == 0 else x.transpose(0, dim)[mask].transpose(0, dim)
 
+#removes a certain key from the model
 def knock_out_ith_key(model: SimpleNN, key_value_idx: torch.Tensor) -> SimpleNN:
   with torch.no_grad():
     new_model = copy.deepcopy(model)
