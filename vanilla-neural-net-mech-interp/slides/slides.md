@@ -28,7 +28,9 @@
 
 + There are two (three if you count inputs as neurons) layers of neurons
 + We pass iteratively from one layer to the next
-+ Therefore to understand why 
++ Therefore to understand why we have an output, need to understand composition
+  of intermediate htings
+    * This is hard!
 
 # Diagram of standard neural net
 
