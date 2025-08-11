@@ -33,7 +33,7 @@
 class="slide section level1">
 <h1>Mechanistic Interpretability (Vanilla Neural Nets)</h1>
 <ul class="incremental">
-<li>Assuming you know what a neural net is</li>
+<li>Assume you know what a neural net is</li>
 <li>What is mechanistic interpretability?
 <ul class="incremental">
 <li>Interpretability: trying to find a way to understand something</li>
@@ -42,6 +42,7 @@ class="slide section level1">
 <li>Ideally you could drill down to the per-neuron level</li>
 </ul></li>
 </ul></li>
+<li>We want to delve into the black box</li>
 </ul>
 </div>
 <div id="common-themes-of-mechanistic-interpretability"
@@ -51,7 +52,7 @@ class="slide section level1">
 <li>Finding mathematically equivalent or near-equivalent restructurings
 of an architecture</li>
 <li>Proving causality</li>
-<li>Analyzing exactly how our model processes images!</li>
+<li>Here, we are analyzing exactly how our model processes images!</li>
 </ul>
 </div>
 <div id="our-object-of-study" class="slide section level1">
@@ -73,11 +74,9 @@ architecture</li>
 digits wrong (and right)</li>
 </ul>
 </div>
-<div
-id="standard-way-of-thinking-about-a-single-hidden-layer-nn"
+<div id="standard-way-of-thinking-about-a-single-hidden-layer-nn"
 class="slide section level1">
-<h1>Standard way of thinking about a standard single hidden layer
-NN</h1>
+<h1>Standard way of thinking about a single hidden layer NN</h1>
 <ul class="incremental">
 <li>There are two (three if you count inputs as neurons) layers of
 neurons</li>
@@ -94,8 +93,9 @@ class="slide section level1">
 <h1>Standard layer by layer decomposition</h1>
 <p><img src="./neural-net-layer-decomposition.svg" width="500px"/></p>
 </div>
-<div id="alternative-decomposition" class="slide section level1">
-<h1>Alternative decomposition</h1>
+<div id="alternative-decomposition-key-value"
+class="slide section level1">
+<h1>Alternative decomposition: key-value</h1>
 <p><img src="./neural-net-key-value-decomposition.svg" width="700px"/></p>
 </div>
 <div id="calculate-as-key-value-decomposition"
@@ -123,15 +123,17 @@ class="slide section level1">
 <h1>Concrete Example</h1>
 <p><img src="./neural-net-example-4.svg" width="700px"/></p>
 </div>
-<div id="exercise-1" class="slide section level1">
+<div id="exercise" class="slide section level1">
 <h1>Exercise</h1>
 <p><img src="./exercise-question.jpeg" width="700px"/></p>
 </div>
-<div id="exercise-2" class="slide section level1">
+<div id="calculation-with-traditional-layer-by-layer-interpretation"
+class="slide section level1">
 <h1>Calculation With Traditional Layer-by-Layer Interpretation</h1>
 <p><img src="./traditional-solution.jpeg" width="700px"/></p>
 </div>
-<div id="exercise-3" class="slide section level1">
+<div id="calculation-with-key-value-decomposition"
+class="slide section level1">
 <h1>Calculation With Key Value Decomposition</h1>
 <p><img src="./key-value-solution.jpeg" width="700px"/></p>
 </div>
