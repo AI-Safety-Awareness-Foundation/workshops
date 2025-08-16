@@ -29,7 +29,9 @@ $\text{ReLU}(0.1 \cdot 0.5 + 5 \cdot -0.1) = 0$
 
 <details>
 <summary>Solution</summary>
+
 ![solution diagram](./traditional-solution.jpeg)
+
 </details>
 
 *Exercise*: 
@@ -40,5 +42,7 @@ $\text{ReLU}(0.1 \cdot 0.5 + 5 \cdot -0.1) = 0$
 
 <details>
 <summary>Solution</summary>
+
 ![solution diagram](./key-value-solution.jpeg)
+
 </details>
