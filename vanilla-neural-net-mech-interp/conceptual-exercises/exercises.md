@@ -15,6 +15,7 @@ $\text{ReLU}(2.0 \cdot 0.5 + 1.5 \cdot -0.1) = 0.85$
 > Calculate what the output of this single neuron is if it was given the two
 > inputs 0.1 and 5 (corresponding respectively to the top input and the bottom
 > input).
+> ![single neuron](./single_neuron_worked.svg)
 
 <details>
 <summary>Solution</summary>
