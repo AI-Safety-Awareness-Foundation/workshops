@@ -23,8 +23,8 @@ in pkgs.mkShell rec {
     pythonPackages.requests
     pythonPackages.torch
     pythonPackages.torchvision
-    pythonPackages.ale-py
-    pythonPackages.pyside6
+    #pythonPackages.ale-py
+    #pythonPackages.pyside6
 
     # sometimes you might need something additional like the following - you will get some useful error if it is looking for a binary in the environment.
     taglib
