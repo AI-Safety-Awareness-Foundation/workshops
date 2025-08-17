@@ -66,15 +66,3 @@
 # Concrete Example
 
 <img src="./neural-net-example-4.svg" width="700px"/>
-
-# Exercise
-
-<img src="./exercise-question.jpeg" width="700px"/>
-
-# Calculation With Traditional Layer-by-Layer Interpretation
-
-<img src="./traditional-solution.jpeg" width="700px"/>
-
-# Calculation With Key Value Decomposition
-
-<img src="./key-value-solution.jpeg" width="700px"/>
