@@ -681,3 +681,122 @@ model_with_0_knocked_out = knock_out_ith_key(models[14], all_values_that_activat
 
 # And now we see that the model is basically entirely incapable of recognizing 0, but the rest of its capabilities are left intact!
 accuracy_by_digit(model_with_0_knocked_out.to(DEVICE), test_loader)
+
+# %%
+
+# NEW STUFF
+
+
+# Now let's explore more practical pruning of the neural net
+# Let's not just look at key-value pairs that activate strongly for specific digits
+# Instead let's look for key-value pairs that barely contribute
+# to any digit classification at all
+# These might represent minimally useful neurons we can remove
+#
+# The question here is what metric to use to evaluate for this
+# One measure we thought of is as follows
+# Key-value pairs where the values are extremely close to 0
+# These would have very small contributions despite the image
+#
+# Below, we will implement a function for finding these key-value pairs
+
+def find_mostly_zero_values(model, threshold=0.05):
+    """
+    Finds key-value pairs where the value vector has very small magnitudes
+    for all digits
+    """
+    #TODO: Implement the function
+    #Hint (if necessary): The find_values_for_digit_over_threshold is good inspiration
+    raise NotImplementedError()
+
+# %%
+
+# Let's see how many of these are in our 131072 hidden units model
+
+mostly_zero_indices = find_mostly_zero_values(models[14], threshold=0.05)
+print(f"{mostly_zero_indices.shape}")
+
+# %%
+
+# make a "pruned" model with them all knocked out
+model_with_zeros_pruned = knock_out_ith_key(models[14], mostly_zero_indices)
+
+
+# %%
+
+# Below is a comparison of the accuracy of the original and pruned models
+
+print("Original Model Accuracy: ")
+print(accuracy_by_digit(models[14].to(DEVICE), test_loader))
+
+print("---------------------------")
+
+print("Pruned Model Accuracy: ")
+print(accuracy_by_digit(model_with_zeros_pruned.to(DEVICE), test_loader))
+
+# %%
+
+# TODO: Look at the results above. What do you notice about the impact of removing
+# these "mostly zero" key-value pairs? Discuss with your group. 
+# You can try different thresholds for pruning as well as
+# visualizing some of the pruned key value pairs.
+# Delete the NotImplementedError() when done
+raise NotImplementedError()
+
+# %%
+
+#
+#
+#
+# Optional
+#
+#
+#
+
+# %%
+
+# Now let's dive deeper into understanding how keys interact with images by
+# looking at the distribution of dot products between keys and images.
+
+# calculating all dot products for the ith image
+def return_dot_products(model, loader, i):
+    images, _ = next(iter(loader))
+
+    img = images[i]
+    viz_img = images[i].cpu().squeeze()
+    visualize_image(viz_img)
+    dot_products = []
+
+    with torch.no_grad():
+        for i in range(model.fc1.weight.shape[0]):
+            key = model.fc1.weight[i].reshape(28, 28)
+            element_wise_multi = key * img
+            dot = torch.sum(element_wise_multi)
+            dot_products.append(dot.item())
+
+    return dot_products
+
+# %%
+
+# plot the dot products 
+def plot_dot_products(dot_products):
+
+    plt.figure(figsize=(10, 6))
+    plt.hist(dot_products.numpy(), bins=50, edgecolor='black')
+    plt.xlabel('Dot Product Value')
+    plt.ylabel('Frequency')
+    plt.grid(True)
+    plt.show()
+
+#combined function
+def combined_dot_product_dist(model, loader, i):
+  dot_products = return_dot_products(model, loader, i)
+  plot_dot_products(torch.tensor(dot_products))
+
+# %%
+
+# TODO: Using these functions, compare the distributions for
+# a pruned and unpruned model. What's something weird you notice? 
+# What do you think causes this?
+# Delete the NotImplementedError() when done
+raise NotImplementedError()
