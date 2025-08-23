@@ -256,11 +256,21 @@ for model in models:
 
 # %%
 
-# Fill this out! This should calculate the accuracy of the model for each digit.
+# calculates the accuracy of the model for each digit.
 
 def accuracy_by_digit(model, loader):
-  # TODO: Implement this!
-  raise NotImplementedError()
+  correct = [0] * 10
+  total = [0] * 10
+  with torch.no_grad():
+    for data, target_probs in loader:
+      output_probs = model(data)
+      output = output_probs.argmax(dim=1)
+      target = target_probs.argmax(dim=1)
+      for i in range(target.shape[0]):
+        total[target[i]] += 1
+        if output[i] == target[i]:
+          correct[target[i]] += 1
+  return [correct[i] / total[i] for i in range(10)]
 
 # %%
 
