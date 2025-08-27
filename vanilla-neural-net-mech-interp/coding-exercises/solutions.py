@@ -1,4 +1,13 @@
 # %%
+#
+#
+#
+# Make sure to run every cell, especially until the accuracy by digit function!
+#
+#
+#
+
+# %%
 
 import torch
 import torch.nn as nn
@@ -392,9 +401,10 @@ visualize_ith_key_value(models[14].cpu(), 246)
 def find_values_for_digit_over_threshold(model, digit, threshold=0.3):
   return torch.tensor([idx for idx in range(model.fc2.weight.shape[1]) if model.fc2.weight[digit, idx] > threshold])
 
-# %%
+#%%
 
-# This finds those values which have an entry of over 0.4 in the 0 digit place.
+# TODO: Find the values which have an entry of over 0.4 in the 0 digit place.
+# raise NotImplementedError()
 
 find_values_for_digit_over_threshold(models[14], 0, threshold=0.4)
 
@@ -434,9 +444,13 @@ def find_values_for_sole_digit(model, digit, digit_threshold=0.16, other_digits_
 
 # %%
 
-# So this for example finds those key-value pairs which tend to write very
-# strongly to the digit 2 happening, but very little for anything else.
+# TODO: find those key-value pairs which tend to write very strongly to the 
+# digit 2, but very little for anything else using the above function
+# raise NotImplementedError()
+
 find_values_for_sole_digit(models[14], 2)
+
+#Feel free to get a look at these!
 
 # %%
 
@@ -541,6 +555,7 @@ visualize_image(train_dataset[0][0].cpu().squeeze())
 
 # %%
 
+# Just an example, and you can try different keys as well!
 visualize_ith_key_value_on_image(models[14], 14219, train_dataset[0][0].cpu().squeeze())
 
 # %%
@@ -555,6 +570,7 @@ def sort_by_value_variance(model, input_image):
   return var_indices
 
 top_5_kv_pairs_by_value_variance = sort_by_value_variance(models[14], train_dataset[0][0].cpu())[:, :5]
+print(top_5_kv_pairs_by_value_variance)
 
 # %%
 
@@ -579,10 +595,14 @@ find_values_with_mostly_zeroes(models[14])
 
 # %%
 
+# TODO: visualize the two key-value pairs, especially pair 905
+# raise NotImplementedError()
+
 visualize_ith_key_value(models[14].cpu(), 905)
 
 # %%
 
+# this is an image of a 2, the digit which pair 905 reacts strongly to 
 visualize_image(train_dataset[5][0].cpu().squeeze())
 
 # %%
@@ -591,6 +611,7 @@ list_top_kv_pair_idxs(models[14], train_dataset[5][0].cpu(), 5500)
 
 # %%
 
+# However, what do you see in the interaction between pair 905 and the image?
 visualize_ith_key_value_on_image(models[14].cpu(), 905, train_dataset[5][0].cpu().squeeze())
 
 # %%
@@ -599,6 +620,8 @@ visualize_image(train_dataset[3][0].cpu().squeeze())
 
 # %%
 
+# Let's now look at the smallest model
+# and compare it to what we saw before
 list_top_kv_pair_idxs(models[0].cpu(), train_dataset[3][0].cpu(), 10_000)
 
 # %%
