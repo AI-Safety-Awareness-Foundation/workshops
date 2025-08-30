@@ -40,7 +40,15 @@ Inside Out</p>
 <ul class="incremental">
 <li>We’ll assume:
 <ul class="incremental">
-<li>You know</li>
+<li>You have some basic Python knowledge</li>
+<li>You’ve built and trained a basic neural net in the past</li>
+</ul></li>
+<li>We’ll be doing:
+<ul class="incremental">
+<li>Quick overview of mech interp and how we’re using it today</li>
+<li>Some conceptual exercises</li>
+<li>Some coding where we play around with real neural net models and try
+to understand how they do image recognition</li>
 </ul></li>
 </ul>
 </div>
@@ -50,8 +58,9 @@ Inside Out</p>
 <li>We are building increasingly powerful AI systems</li>
 <li>Current trajectory points toward AGI (Artificial General
 Intelligence) and potentially ASI (Artificial Superintelligence)</li>
-<li><strong>Critical problem</strong>: We don’t understand how these
-systems work internally</li>
+<li><strong>Critical problem</strong>: We don’t understand how to
+actually make these increasingly capable systems reliably do what we
+want</li>
 <li>We deploy systems we cannot:
 <ul class="incremental">
 <li>Fully predict</li>
@@ -60,46 +69,30 @@ systems work internally</li>
 </ul></li>
 </ul>
 </div>
-<div id="why-this-matters" class="slide section level1">
-<h1>Why This Matters</h1>
+<div id="technical-ai-safety-problems" class="slide section level1">
+<h1>Technical AI Safety Problems</h1>
+</div>
+<div id="note" class="slide section level1">
+<h1>Note</h1>
 <ul class="incremental">
-<li>AI systems are already making consequential decisions:
+<li>There are a host of other social AI safety problems
 <ul class="incremental">
-<li>Medical diagnoses</li>
-<li>Loan approvals</li>
-<li>Criminal justice recommendations</li>
-<li>Autonomous vehicle navigation</li>
+<li>Who gets to decide what an AI should do?</li>
+<li>How should society</li>
 </ul></li>
-<li>As capabilities increase, so do potential risks:
-<ul class="incremental">
-<li>Misaligned objectives</li>
-<li>Unintended optimization targets</li>
-<li>Deceptive behavior</li>
-<li>Catastrophic failures at scale</li>
-</ul></li>
+<li>Today we’re focused on the technical problem</li>
 </ul>
 </div>
 <div id="we-might-not-have-a-lot-of-time" class="slide section level1">
 <h1>We Might Not Have a Lot of Time</h1>
 <ul class="incremental">
-<li>There’s a chance we might get AGI quite soon
-<ul class="incremental">
-<li>What</li>
-</ul></li>
+<li>AI companies think there’s a chance we might get AGI very soon</li>
 </ul>
 </div>
-<div id="the-black-box-problem" class="slide section level1">
-<h1>The Black Box Problem</h1>
-<div style="text-align: center; font-size: 1.5em; margin: 40px;">
-<p>Input → [???] → Output</p>
-</div>
+<div id="uncertainty-remains" class="slide section level1">
+<h1>Uncertainty Remains</h1>
 <ul class="incremental">
-<li>Modern AI systems contain billions or trillions of parameters</li>
-<li>We know the architecture and weights</li>
-<li>But we don’t know <strong>what the model has learned</strong> or
-<strong>how it makes decisions</strong></li>
-<li>This opacity becomes dangerous with sufficiently powerful
-systems</li>
+<li></li>
 </ul>
 </div>
 <div id="mechanistic-interpretability-one-bet"
@@ -113,8 +106,7 @@ might:
 <ul class="incremental">
 <li>Detect deception</li>
 <li>Identify dangerous capabilities</li>
-<li>Build safer systems</li>
-<li>Verify alignment</li>
+<li>Verify alignment with designer objectives</li>
 </ul></li>
 <li><strong>Reality</strong>: Current progress is promising but severely
 limited</li>
@@ -152,14 +144,14 @@ can be fun!</li>
 <li>Scale our techniques to frontier models</li>
 </ul>
 </div>
-<div id="reality-is-not-great" class="slide section level1">
-<h1>Reality is Not Great</h1>
+<div id="disclaimer" class="slide section level1">
+<h1>Disclaimer</h1>
 <ul class="incremental">
-<li><strong>No current AI safety approach is on track to solve AGI/ASI
-alignment</strong>
+<li><strong>No current AI safety approach is confidently on track to
+solve AGI/ASI alignment</strong>
 <ul class="incremental">
-<li>There are reasons</li>
-<li>Including mechanistic interpretability</li>
+<li>There are reasons to doubt the viability of any single approach</li>
+<li>This including mechanistic interpretability!</li>
 </ul></li>
 <li>The gap between our understanding and our capabilities is
 <strong>growing</strong>, not shrinking</li>
@@ -174,11 +166,12 @@ out.</strong>
 <li>This is a bad situation!</li>
 <li>But not hopeless: this is where AI capabilities was before LLMs
 rolled around</li>
+<li>We have hope that one bet will work, but unsure which one</li>
 </ul></li>
 </ul>
 </div>
-<div id="todays-workshop" class="slide section level1">
-<h1>Today’s Workshop</h1>
+<div id="todays-object-of-study" class="slide section level1">
+<h1>Today’s Object of Study</h1>
 <ul class="incremental">
 <li>We’ll study a <strong>vanilla neural network</strong> - vastly
 simpler than modern systems</li>
@@ -189,22 +182,6 @@ techniques</li>
 complex architectures</li>
 </ul>
 </div>
-<div id="mechanistic-interpretability-vanilla-neural-nets"
-class="slide section level1">
-<h1>Mechanistic Interpretability (Vanilla Neural Nets)</h1>
-<ul class="incremental">
-<li>Assume you know what a neural net is</li>
-<li>What is mechanistic interpretability?
-<ul class="incremental">
-<li>Interpretability: trying to find a way to understand something</li>
-<li>Mechanistic: finding the specific, concrete mechanisms used
-<ul class="incremental">
-<li>Ideally you could drill down to the per-neuron level</li>
-</ul></li>
-</ul></li>
-<li>We want to delve into the black box</li>
-</ul>
-</div>
 <div id="common-themes-of-mechanistic-interpretability"
 class="slide section level1">
 <h1>Common themes of mechanistic interpretability</h1>
@@ -213,16 +190,6 @@ class="slide section level1">
 of an architecture</li>
 <li>Being able to identify specific, concrete parts of a model that are
 responsible for</li>
-</ul>
-</div>
-<div id="our-object-of-study" class="slide section level1">
-<h1>Our object of study</h1>
-<ul class="incremental">
-<li>Vanilla neural net (single hidden layer)</li>
-<li>Simple image recognition</li>
-<li>Much simpler than modern LLMs</li>
-<li>But still complex enough to demonstrate the fundamental themes of
-mechanistic interpretability</li>
 </ul>
 </div>
 <div id="what-youll-be-able-to-do-at-the-end-of-the-day"
@@ -263,6 +230,43 @@ class="slide section level1">
 class="slide section level1">
 <h1>Calculate as “key-value” decomposition</h1>
 <p><img src="./neural-net-key-value-calculation.svg" width="500px"/></p>
+</div>
+<div id="concrete-example" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network.svg" width="600px"/></p>
+</div>
+<div id="concrete-example-1" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network-first-kv-pair.svg" width="300px"/></p>
+<p><img src="./calculated-network-second-kv-pair.svg" width="300px"/></p>
+</div>
+<div id="concrete-example-2" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-1.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-3" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network-input-0.svg" width="600px"/></p>
+</div>
+<div id="concrete-example-4" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-2.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-5" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network-input-1.svg" width="600px"/></p>
+</div>
+<div id="concrete-example-6" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-3.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-7" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network-input-2.svg" width="600px"/></p>
+</div>
+<div id="concrete-example-8" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-4.svg" width="700px"/></p>
 </div>
 </body>
 </html>

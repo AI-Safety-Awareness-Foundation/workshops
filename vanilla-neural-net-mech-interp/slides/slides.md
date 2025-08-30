@@ -125,3 +125,42 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 # Calculate as "key-value" decomposition
 
 <img src="./neural-net-key-value-calculation.svg" width="500px"/>
+
+# Concrete Example
+
+<img src="./calculated-network.svg" width="600px"/>
+
+# Concrete Example
+
+<img src="./calculated-network-first-kv-pair.svg" width="300px"/>
+
+<img src="./calculated-network-second-kv-pair.svg" width="300px"/>
+
+# Concrete Example
+
+<img src="./neural-net-example-1.svg" width="700px"/>
+
+# Concrete Example
+
+<img src="./calculated-network-input-0.svg" width="600px"/>
+
+# Concrete Example
+
+<img src="./neural-net-example-2.svg" width="700px"/>
+
+# Concrete Example
+
+<img src="./calculated-network-input-1.svg" width="600px"/>
+
+# Concrete Example
+
+<img src="./neural-net-example-3.svg" width="700px"/>
+
+# Concrete Example
+
+<img src="./calculated-network-input-2.svg" width="600px"/>
+
+# Concrete Example
+
+<img src="./neural-net-example-4.svg" width="700px"/>
+
