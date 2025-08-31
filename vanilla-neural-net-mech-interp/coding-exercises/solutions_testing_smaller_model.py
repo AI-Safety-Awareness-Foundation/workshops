@@ -7,32 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1dxOid2V5FWvOoHQLRrnXYdQ8ovEy0HrC
 """
 
-#!/usr/bin/env bash
-
-# Not provided by default in Google Colab
-!pip install jaxtyping
-
-# The rest downloads some binary files we'll need
-!pip install gdown
-
-# Download all the pretrained models
-
-!gdown --id 1F2Z8ziHPaXd_GT_fYe974ySiQVhW0yz0
-!gdown --id 1gGE9MtYvQwCevY9qx-3BEYyoIhDOOBBh
-!gdown --id 1mLEVHleRHiGLHKvu06LE0Oq2Mm6b2lCg
-!gdown --id 1KTZ9m4qmEmUIr-FZMSeVUkd4H8LSB_4b
-!gdown --id 1-Q16KxTkfg5hktOAE-OPgWglgGaaaHFd
-!gdown --id 1RFwpFgpPIOONABfXiHGsMtJdUF1gd10S
-!gdown --id 15BUINas3RQcUVml3QQvoOTVkZjd7IPFS
-!gdown --id 1ASEwxJHndnjFiu2G9tdmn3B5OJkvRQb7
-!gdown --id 1AggdX5mQ9o1QAy9P8_ZpckC8qRDTwPm1
-!gdown --id 1nMjFaMMtijoLidaJSMQoYGnQld5TKp7Q
-!gdown --id 19H7Y50yQsUBj9dWzHWOU8VJJ6zU4cQhA
-!gdown --id 1A5O3OatMM0Lj2m1655Nx1NSwoervV0mS
-!gdown --id 1rKFm7BY8eqQitHYDTrKHzWoFDE_e7fp0
-!gdown --id 1vNM6pD5gc4oOzumGtURp6ASw7nqtwinz
-#!gdown --id 1_1GFcsjIuWRUcgPU9rMEY5g66K7eX93M # 131
-
 #
 #
 #
@@ -584,7 +558,7 @@ def return_dot_products_test(model, img):
     return dot_products_with_bias
 
 #plots the dot products, ensuring the x and y axis has the same scale each time
-def plot_dot_products(dot_products, dot_products_with_bias):
+def plot_dot_products(dot_products_with_bias):
     plt.figure(figsize=(12, 8))
 
     if isinstance(dot_products_with_bias, torch.Tensor):
@@ -593,7 +567,7 @@ def plot_dot_products(dot_products, dot_products_with_bias):
     sort_indices = np.argsort(dot_products_with_bias)
     sorted_dot_products_with_bias = np.array(dot_products_with_bias)[sort_indices]
 
-    x_indices = range(len(sorted_dot_products))
+    x_indices = range(len(sorted_dot_products_with_bias))
 
     plt.plot(x_indices, sorted_dot_products_with_bias, 'r-', label='Dot Product + Key Bias', linewidth=1.5, alpha=0.7)
 
@@ -624,44 +598,24 @@ plot_dot_products(dot_products_with_bias)
 
 # Now let's analyze an image the model gets wrong
 
-#
-#
-#
-# NEED TO REWRITE BELOW SECTION AS I RAN OUT OF COLAB GPU USAGE
-# need to write exercise like above where they can experiment and figure out where the model goes wrong
-#
-#
-#
+# The model gets this image of a 4 wrong
+visualize_image(test_dataset[247][0].cpu().squeeze())
 
-data, target = next(iter(test_loader))
+# It's confident that it's a two
+models[13].cpu()(test_dataset[247][0].cpu().unsqueeze(0))
 
-models[13](data[65])
+# Like before, use the function below to find a set of most signficant key-value pairs
+list_top_kv_pair_idxs(models[13].cpu(), test_dataset[247][0].cpu(), 1700)
 
-list_top_kv_pair_idxs(models[13].cpu(), data[252].cpu(), 1820)
-
-visualize_ith_key_value_on_image(models[13].cpu(), 58171, data[252].cpu().squeeze())
-
-arr2 = [32283, 62581, 58171,  2823, 17794, 33330, 59696]#, 17554, 31994]#, 283,
-        #17670,  7159,  5449, 31976, 36475, 22669] #starting from 59696
-        # starting from 32282, it thinks it's a 6
-        # with the inclusion of 33330 it thinks it's a 4
-        #then immediately after it never thinks it's a 4 again
-
-logits, final = calculate_output_only_with_certain_indices(models[13].cpu(), data[252].cpu(), arr2)
-print(logits)
-print(final)
-
-#
-#
-#
-# NEED TO REWRITE ABOVE SECTION AS I RAN OUT OF COLAB GPU USAGE
-#
-#
-#
+# TODO: Use calculate_output_only_with_certain_indices to see how the model's prediction changes with less key-value pairs
+# Does the model always make an incorrect inference? Or does it make a correct prediction at some point and switches back
+# We suggest you start by using only the index for the most signficant key-value pair, and then giving more in order of significance
+# Of course, visualize the pairs as well!
+# raise NotImplementedError()
 
 visualize_image(train_dataset[0][0].cpu().squeeze())
 
-# finds the most variable key-value pairs
+# finds the most variable key-value pairs on an image
 def sort_by_value_variance(model, input_image):
   _, output_after_values = compute_kv_outputs_for_image(model, input_image)
   print(f"{torch.var(output_after_values, dim=-1, keepdim=True).shape=}")
@@ -720,8 +674,10 @@ result = sort_highest_activating_image_for_key(models[13].cpu(), 905, train_imag
 
 print(f"{result=}")
 
-# what do the corresponding images look like?
-visualize_image(train_images[result][5].cpu().squeeze())
+# What do the corresponding images look like?
+# Could you infer what this key-value pair is looking for?
+# Visualize the pair itself to check
+visualize_image(train_images[result][3].cpu().squeeze())
 
 # Finally, we'll use our knowledge of the key-value pairs to "edit" the neural network
 
