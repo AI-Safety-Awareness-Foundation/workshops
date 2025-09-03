@@ -1,13 +1,20 @@
-# %%
-#
-#
-#
-# Make sure to run every cell, especially until the accuracy by digit function!
-#
-#
-#
+# %% [markdown]
+"""
+This notebook is meant to be an interactive exploration of how we can use a
+key-value perspective on a single hidden-layer neural net to get much more
+interpretable results about how a basic neural net is able to do image
+recognition of hand-written digits from the MNIST dataset.
+
+This is meant to be used alongside a set of slides found in the associated
+GitHub repository.
+
+It's split into three main components. We'll first revisit
+"""
 
 # %%
+
+# Some basic imports that will be necessary for any of our code to be able to
+# run.
 
 import torch
 import torch.nn as nn
@@ -15,40 +22,316 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import TwoSlopeNorm
 import einops
+
+# %% [markdown]
+"""
+Let's begin with a very quick look at the single hidden layer neural net we're
+using for our exercise today. This kind of basic neural net goes by many names,
+whether it's an MLP (Multi-Layer Perceptron), feed-forward neural net, vanilla
+neural net, etc.
+
+A neural net with a single hidden layer is enough to approximate any function if
+the net is large enough, so in theory could be used for many different tasks.
+
+In practice, for many domains it turns out it is extremely difficult to actually
+get a single hidden layer neural net to learn the relevant task at hand within a
+feasible computational and data budget. However, it turns out to be enough to
+get reasonable scores for recognizing hand-written digits in the MNIST dataset.
+
+Moreover, it's one of the most basic components of modern machine learning
+and AI that still exhibits enough complexity to be interesting and is often
+treated as an opaque black box we do not understand.
+
+This exploration will hopefully show you some ways of breaking open this black
+box and making it more understandable!
+
+For MNIST digit recognition, we'll set the input dimension to 784 (for 28x28
+images) and the output dimension to 10 (one for each category of digit). But
+we'll leave these flexible, as well as whether to use softmax or not, because
+we'll use this same architecture to illustrate some of the tiny neural nets we
+presented in the slides.
+
+Spend a few minutes reviewing the architecture of `SimpleNN` to make sure you
+understand what's going on. The default settings for `__init__` are all meant
+for our main MNIST digit recognition task.
+"""
 
 # %%
 
-# Some nice preliminary functions for testing.
+# simple NN with 3 layers
+class SimpleNN(nn.Module):
+    def __init__(self, hidden_dim: int, input_dim=784, output_dim=10, has_bias: bool=True, use_softmax: bool=True):
+        super(SimpleNN, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(input_dim, hidden_dim, bias=has_bias)
+        self.fc2 = nn.Linear(hidden_dim, output_dim, bias=has_bias)
+        self.relu = nn.ReLU()
+        self.use_softmax = use_softmax
+        self.softmax = nn.Softmax(dim=-1)
 
-def assert_with_expect(expected, actual):
-    assert expected == actual, f"Expected: {expected} Actual: {actual}"
+    def forward(self, x):
+        x = self.flatten(x)
+        x1 = self.relu(self.fc1(x))
+        x2 = self.fc2(x1)
+        if self.use_softmax:
+          return self.softmax(x2)
+        else:
+           return x2
+
+# %% [markdown]
+"""
+Okay now we want to reframe our model using the key-value visualization So it's
+time to implement the functions that will pull out the ith key and ith value in
+our neural net.
+
+These functions are just one line each, but they are extremely important to
+understand. As a reminder, the connections between two layers of a neural net
+can be described as a matrix.
+
+For example, in the following neural net where A and B, C and D, and E and F all
+form respective neural net layers, this can be represented as two matrices
+describing the connections from the AB layer to the CD layer and then from the
+CD layer to the EF layer.
+
+```
+A -- C -- E
+  \ /  \ /
+  / \  / \ 
+B -- D -- F
+```
+
+These two matrices look like
+
+$\begin{bmatrix} AC & BC \\ AD & BD \end{bmatrix}$
+
+and
+
+$\begin{bmatrix} CE & DE \\ CF & DF \end{bmatrix}$
+
+where e.g. $AC$ refers to the weight of the connection from $A$ to $C$, $BD$ to
+the weight of the connection from $B$ to $D$, etc.
+
+If we split the neural net into key-value pairs, we end up with the following:
+
+```
+A -- C -- E
+    /  \  
+  /      \ 
+B         F
+```
+
+and 
+
+```
+A         E
+  \      /
+    \  /   
+B -- D -- F
+```
+.
+
+If you observe the key and value of the first key value pair, you'll find that
+they are $\begin{bmatrix} AC \\ BC \end{bmatrix}$ and $\begin{bmatrix} CE \\ CF
+\end{bmatrix}$ respectively. That is the first key corresponds to the first row
+of the first matrix and the first value corresponds to the first column of the
+second matrix.
+
+This holds for the second key-value pair as well. More generally, the $i$-th
+key-value pair will have its key correspond to the $i$-th row of the first matrix
+and the $i$-th column of the second matrix.
+
+The reason we alternate between rows and columns of the respective matrices is
+that the rows of a matrix correspond to the weights of connections coming into a
+neuron and the columns of a matrix correspond to the weights of all the
+connections broadcasting out to the next set of neurons.
+
+The traditional view of neural nets where each neuron takes $n$ inputs and gives
+one output focuses primarily on this "per-row" perspective, but in our key-value
+perspective we combine the "per-row" and "per-column" perspective.
+
+This per-row and per-column perspective immediately leads to the one-line
+implementations of `pull_out_ith_key` and `pull_out_ith_value`.
+"""
+
+# %%
 
 
-def assert_list_of_floats_within_epsilon(
-    expected: list[float], 
-    actual: list[float],
-    eps=0.0001,
-):
-    if len(expected) != len(actual):
-        raise AssertionError(f"Expected: {expected} Actual: {actual}")
-    is_within_eps = True
-    for e, a in zip(expected, actual):
-        is_within_eps = is_within_eps and abs(e - a) < eps
-    if not is_within_eps:
-        raise AssertionError(f"Expected: {expected} Actual: {actual}")
+def pull_out_ith_key(model, i):
+  return model.fc1.weight[i]
 
+def pull_out_ith_value(model, i):
+  return model.fc2.weight[:, i]
 
-def assert_tensors_within_epsilon(
-    expected: torch.Tensor,
-    actual: torch.Tensor,
-    eps=0.001,
-):
-    if expected.shape != actual.shape:
-        raise AssertionError(f"Shapes of tensors do not match! Expected: {expected.shape} Acutal: {actual.shape}")
-    differences_within_epsilon = abs(expected - actual) < eps
-    if not differences_within_epsilon.all():
-        raise AssertionError(f"Values of tensors do not match! Expected: {expected} Actual: {actual}")
+# %% [markdown]
+"""
+This is all a lot of visualization code which you can either read or just run.
+
+Unlike the previous section, you don't need to understand these too well.
+"""
+
+# %%
+
+#plots the image
+def visualize_image(image):
+  norm = TwoSlopeNorm(vmin=-1, vcenter=0, vmax=1)
+  plt.imshow(image.detach().numpy(), cmap='seismic', norm=norm)
+  plt.axis('off')
+  plt.show()
+
+#plots a heatmap of a key
+def visualize_ith_key(model, i, x_size=28, y_size=28):
+  key = pull_out_ith_key(model, i).reshape(x_size, y_size)
+  if model.fc1.bias is not None:
+    key_bias = model.fc1.bias[i]
+  else:
+     key_bias = 0
+  norm = TwoSlopeNorm(vmin=-1, vcenter=0, vmax=1)
+  plt.imshow(key.detach().numpy(), cmap='seismic', norm=norm)
+  plt.axis('off')
+  plt.title(f'Key {i} (bias: {key_bias})')
+  plt.show()
+
+#visualizes a value
+def visualize_ith_value(model, i):
+  value = pull_out_ith_value(model, i).unsqueeze(0)
+  norm = TwoSlopeNorm(vmin=-1, vcenter=0, vmax=1)
+  plt.imshow(value.detach().numpy(), cmap='seismic', norm=norm)
+  for x in range(value.shape[1]):
+    plt.text(x, 0, f'{value[0, x].item():.3f}', ha='center', va='center', color='black', fontsize=6)
+  plt.axis('off')
+  plt.title(f'Value {i}')
+  plt.show()
+
+#visualizes the global value bias for each digit, or the baseline before any interactions
+def visualize_value_bias(model):
+  value = model.fc2.bias.unsqueeze(0)
+  norm = TwoSlopeNorm(vmin=-1, vcenter=0, vmax=1)
+  plt.imshow(value.detach().numpy(), cmap='seismic', norm=norm)
+  for x in range(value.shape[1]):
+    plt.text(x, 0, f'{value[0, x].item():.3f}', ha='center', va='center', color='black', fontsize=6)
+  plt.axis('off')
+  plt.title(f'Global value bias')
+  plt.show()
+
+#combines the above 3 visualization functions
+def visualize_ith_key_value(model, i, key_x_size=28, key_y_size=28):
+  visualize_ith_key(model, i, x_size=key_x_size, y_size=key_y_size)
+  visualize_ith_value(model, i)
+  if model.fc2.bias is not None:
+    visualize_value_bias(model)
+
+#Shows most influential interaction areas between an image and key 
+def visualize_element_wise_multi_of_key_image(model, i, image, key_x_size=28, key_y_size=28):
+  key = model.fc1.weight[i].reshape(key_x_size, key_y_size)
+  element_wise_multi = key * image
+  norm = TwoSlopeNorm(vmin=-1, vcenter=0, vmax=1)
+  plt.imshow(element_wise_multi.detach().numpy(), cmap='seismic', norm=norm)
+  plt.axis('off')
+  plt.title(f'Element-wise multiplication of key {i} with image')
+  plt.show()
+  print(f"Dot-Product: {torch.sum(element_wise_multi)}")
+
+#combines all of the above visualization functions
+def visualize_ith_key_value_on_image(model, i, image, key_x_size=28, key_y_size=28):
+  visualize_ith_key_value(model, i, key_x_size=key_x_size, key_y_size=key_y_size)
+  visualize_element_wise_multi_of_key_image(model, i, image, key_x_size=key_x_size, key_y_size=key_y_size)
+
+# %% [markdown]
+"""
+Let's play around a little with our visualization functions.
+
+We can being by visualizing a few 2x2 images.
+
+Instead of using black and white, as in our slides, we'll use two contrasting
+colors in addition to white, since once we plot things that aren't just image
+pixels, we may need to plot both positive and negative numbers. We'll use
+increasingly darker shades of red to indicate positive numbers of increasing
+magnitude, increasingly darker shades of blue to indicate negatives numbers of
+increasing magnitude, and white to indicate 0.
+
+This means most of our images of handwritten digits will consist of red and
+white (red for 1 and white for 0), although our keys and value vectors will
+consist of red, white, and blue.
+"""
+
+# %%
+
+input_0 = torch.Tensor(
+   [
+      [1, 0],
+      [1, 0],
+   ]
+)
+
+visualize_image(input_0)
+
+# %%
+
+input_1 = torch.Tensor(
+   [
+      [1, 0],
+      [1, 1],
+   ]
+)
+
+visualize_image(input_1)
+
+# %%
+
+input_2 = torch.Tensor(
+   [
+      [0, 0],
+      [1, 0],
+   ]
+)
+
+visualize_image(input_2)
+
+# %% [markdown]
+"""
+We now recreate the basic neural net we used in our slides to demonstrate the
+key-value decomposition of a neural net.
+"""
+
+# %%
+
+# When we first initialize a SimpleNN, all parameters 
+example_nn = SimpleNN(hidden_dim=2, input_dim=4, output_dim=2)
+preset_fc1 = nn.Parameter(
+  torch.Tensor(
+    [
+      [1, 0, 0, 0],
+      [0, 0, 0, 1],
+    ]
+  )
+)
+
+preset_fc2 = nn.Parameter(torch.Tensor(
+   [
+      [1, 0.5],
+      [0, 0.5],
+   ]
+))
+example_nn.fc2.weight = preset_fc2
+print(f"{example_nn.fc2.weight=}")
+
+# %%
+
+# %%
+
+example_nn(input_0)
+
+# %%
+
+visualize_ith_key_value(
+  model=example_nn, 
+  i=0, 
+  key_x_size=2, 
+  key_y_size=2
+)
 
 # %%
 
@@ -73,42 +356,6 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 TRAIN_FROM_SCRATCH = False
 # When training, should we load the entire image set into GPU memory
 LOAD_EVERYTHING_INTO_GPU_MEMORY = True
-
-# simple with 3 layers
-class SimpleNN(nn.Module):
-    def __init__(self, hidden_dim):
-        super(SimpleNN, self).__init__()
-        self.hidden_dim = hidden_dim
-        self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(784, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, 10)
-        self.relu = nn.ReLU()
-        self.softmax = nn.Softmax(dim=-1)
-
-    def forward(self, x):
-        x = self.flatten(x)
-        x1 = self.relu(self.fc1(x))
-        x2 = self.fc2(x1)
-        return self.softmax(x2)
-
-# %%
-
-# This is useful for creating reproducible tests for whether you wrote the code
-# correctly!
-EXAMPLE_SIMPLE_NN_HIDDEN_DIM = 6
-example_simple_nn = SimpleNN(EXAMPLE_SIMPLE_NN_HIDDEN_DIM)
-
-# We'll hard-code all of these values so that they are reproducible for tests
-with torch.no_grad():
-  fc1_weight = einops.rearrange(torch.arange(784 * EXAMPLE_SIMPLE_NN_HIDDEN_DIM), "(x y) -> x y", x=EXAMPLE_SIMPLE_NN_HIDDEN_DIM, y=784)
-  fc1_bias = torch.arange(EXAMPLE_SIMPLE_NN_HIDDEN_DIM)
-  fc2_weight = einops.rearrange(torch.arange(10 * EXAMPLE_SIMPLE_NN_HIDDEN_DIM), "(x y) -> x y", x=10, y=EXAMPLE_SIMPLE_NN_HIDDEN_DIM)
-  fc2_bias = torch.arange(10)
-  example_simple_nn.fc1.weight = torch.nn.Parameter(fc1_weight.to(torch.float))
-  example_simple_nn.fc1.bias = torch.nn.Parameter(fc1_bias.to(torch.float))
-  example_simple_nn.fc2.weight = torch.nn.Parameter(fc2_weight.to(torch.float))
-  example_simple_nn.fc2.bias = torch.nn.Parameter(fc2_bias.to(torch.float))
-
 
 # %%
 
@@ -293,89 +540,6 @@ accuracy_by_digit(models[0], test_loader)
 
 # %%
 
-# Okay now we want to reframe our model using the key-value visualization
-# So it's time to implement the functions that will pull out the ith key and ith
-# value in our neural net.
-
-def pull_out_ith_key(model, i):
-  # TODO: Implement this (it should be just one line)
-  # raise NotImplementedError()
-  return model.fc1.weight[i]
-
-def pull_out_ith_value(model, i):
-  # TODO: Implement this (again should just be one line)
-  # raise NotImplementedError()
-  return model.fc2.weight[:, i]
-
-# Test code to make sure your code works!
-assert_tensors_within_epsilon(expected=torch.arange(1568, 2352), actual=pull_out_ith_key(example_simple_nn, 2))
-assert_tensors_within_epsilon(
-   expected=torch.tensor([ 2.,  8., 14., 20., 26., 32., 38., 44., 50., 56.]),
-   actual=pull_out_ith_value(example_simple_nn, 2)
-)
-
-# %%
-
-# This is all a lot of visualization code which you can either read or just run.
-
-#plots the image
-def visualize_image(image):
-  plt.imshow(image.detach().numpy(), cmap='viridis')
-  plt.axis('off')
-  plt.show()
-
-#plots a heatmap of a key
-def visualize_ith_key(model, i):
-  key = pull_out_ith_key(model, i).reshape(28, 28)
-  key_bias = model.fc1.bias[i]
-  plt.imshow(key.detach().numpy(), cmap='viridis')
-  plt.axis('off')
-  plt.title(f'Key {i} (bias: {key_bias})')
-  plt.show()
-
-#visualizes a value
-def visualize_ith_value(model, i):
-  value = pull_out_ith_value(model, i).unsqueeze(0)
-  plt.imshow(value.detach().numpy(), cmap='viridis')
-  for x in range(value.shape[1]):
-    plt.text(x, 0, f'{value[0, x].item():.3f}', ha='center', va='center', color='red', fontsize=6)
-  plt.axis('off')
-  plt.title(f'Value {i}')
-  plt.show()
-
-#visualizes the global value bias for each digit, or the baseline before any interactions
-def visualize_value_bias(model):
-  value = model.fc2.bias.unsqueeze(0)
-  plt.imshow(value.detach().numpy(), cmap='viridis')
-  for x in range(value.shape[1]):
-    plt.text(x, 0, f'{value[0, x].item():.3f}', ha='center', va='center', color='red', fontsize=6)
-  plt.axis('off')
-  plt.title(f'Global value bias')
-  plt.show()
-
-#combines the above 3 visualization functions
-def visualize_ith_key_value(model, i):
-  visualize_ith_key(model, i)
-  visualize_ith_value(model, i)
-  visualize_value_bias(model)
-
-#Shows most influential interaction areas between an image and key 
-def visualize_element_wise_multi_of_key_image(model, i, image):
-  key = model.fc1.weight[i].reshape(28, 28)
-  element_wise_multi = key * image
-  plt.imshow(element_wise_multi.detach().numpy(), cmap='viridis')
-  plt.axis('off')
-  plt.title(f'Element-wise multiplication of key {i} with image')
-  plt.show()
-  print(f"Dot-Product: {torch.sum(element_wise_multi)}")
-
-#combines all of the above visualization functions
-def visualize_ith_key_value_on_image(model, i, image):
-  visualize_ith_key_value(model, i)
-  visualize_element_wise_multi_of_key_image(model, i, image)
-
-# %%
-
 # Now that we have a way of pulling out keys and values, we can put that all
 # together to visualize a particular key-value pair!
 #
@@ -403,12 +567,11 @@ def find_values_for_digit_over_threshold(model, digit, threshold=0.3):
 
 #%%
 
-# TODO: Find the values which have an entry of over 0.4 in the 0 digit place.
-# raise NotImplementedError()
-
 find_values_for_digit_over_threshold(models[14], 0, threshold=0.4)
 
 # Feel free to feed this into visualize_ith_key_value to see what that key_value pair looks like!
+
+visualize_ith_key_value(models[14], 51440)
 
 # %%
 
@@ -716,3 +879,5 @@ model_with_0_knocked_out = knock_out_ith_key(models[14], all_values_that_activat
 
 # And now we see that the model is basically entirely incapable of recognizing 0, but the rest of its capabilities are left intact!
 accuracy_by_digit(model_with_0_knocked_out.to(DEVICE), test_loader)
+
+# %%

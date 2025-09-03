@@ -52,6 +52,29 @@ def assert_tensors_within_epsilon(
 
 # %%
 
+# Begin with the same example that we saw 
+
+class ExampleNN(nn.Module):
+  def __init__(self):
+    super(ExampleNN, self).__init__()
+    self.flatten = nn.Flatten()
+    # Set bias to be false because our example had no bias
+    self.fc1 = nn.Linear(4, 2, bias=False)
+    self.fc2 = nn.Linear(2, 2, bias=False)
+    self.relu = nn.ReLU()
+
+  def forward(self, x):
+    flattened_x = self.flatten(x)
+    x1 = self.relu(self.fc1(flattened_x))
+    x2 = self.fc2(x1)
+    return x2
+
+# %%
+
+example_nn = ExampleNN()
+
+# %%
+
 # None of this is code that you will need to write, but you should read this
 # over to understand the structure of what kind of nets we'll be training.
 #
