@@ -4,7 +4,7 @@
 > inputs 2.0 and 1.5 (corresponding respectively to the top input and the bottom
 > input).
 >
-> ![single neuron](./single_neuron_worked.svg)
+> ![single neuron](./single_neuron_worked.jpeg)
 
 <details>
 <summary>Solution</summary>
@@ -17,7 +17,7 @@ $\text{ReLU}(2.0 \cdot 0.5 + 1.5 \cdot -0.1) = 0.85$
 > inputs 0.1 and 5 (corresponding respectively to the top input and the bottom
 > input).
 >
-> ![single neuron](./single_neuron_worked.svg)
+> ![single neuron](./single_neuron_worked.jpeg)
 
 <details>
 <summary>Solution</summary>

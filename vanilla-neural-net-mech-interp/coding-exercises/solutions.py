@@ -1359,19 +1359,19 @@ print(f"{top_key_value_pairs_for_img_of_four=}")
 
 # %% [markdown]
 """
-Note that this image
+Note that when using this top set below, the model predicts a four.
 """
 
 # %%
 calculate_output_only_with_certain_kv_indices(
   models[MODEL_IDX_WE_ARE_USING], 
   image_of_four_in_test_set,
-  top_key_value_pairs_for_img_of_four[:15],
+  top_key_value_pairs_for_img_of_four[:8],
 )
 
 # %% [markdown]
 """
-This image has a pretty interesting
+What does the model predict now if we use more key-value pairs?
 """
 
 # %%
@@ -1513,8 +1513,13 @@ def knock_out_ith_key(model: SimpleNN, key_value_idx: torch.Tensor) -> SimpleNN:
     new_model.fc1.bias = torch.nn.Parameter(delete_by_index(model.fc1.bias, key_value_idx))
     new_model.fc2.weight = torch.nn.Parameter(delete_by_index(model.fc2.weight, key_value_idx, dim=1))
     return new_model
+  
+#
 
 # %%
+
+def find_values_for_digit_over_threshold(model, digit, threshold=0.3):
+  return torch.tensor([idx for idx in range(model.fc2.weight.shape[1]) if model.fc2.weight[digit, idx] > threshold])
 
 # Find all those key-value pairs which activate a lot for zero
 all_values_that_activate_significantly_for_zero = find_values_for_digit_over_threshold(models[MODEL_IDX_WE_ARE_USING], 0, threshold=0.1)
