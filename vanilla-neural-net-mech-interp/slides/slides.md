@@ -30,17 +30,19 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 
 + There are a host of other social AI safety problems
     - Who gets to decide what an AI should do?
-    - How should society
+    - How should society decide what to do with AI?
 + Today we're focused on the technical problem
 
 # We Might Not Have a Lot of Time
 
 + AI companies think there's a chance we might get AGI very soon
++ [Video of Anthropic CEO](https://www.youtube.com/watch?v=7LNyUbii0zw&t=128s)
 
 # Uncertainty Remains
 
 + How long until AGI?
-+ How long for
++ What does achieving AGI actually look like?
++ How much will current architectural designs hold?
 
 # Mechanistic Interpretability: One Bet
 
@@ -67,10 +69,10 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 + Find some interpretable directions in language models
 
 ## What we **cannot** do:
-+ Fully interpret even small models
-+ Reliably detect deception
-+ Predict emergent capabilities
-+ Scale our techniques to frontier models
++ Fully interpret even small LLMs
++ Build robust and comprehensive detectors of things like deception (although
+  there's some promising sparks!)
++ Robustly predict emergent capabilities
 
 # Disclaimer
 
@@ -109,7 +111,9 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 
 + There are two (three if you count inputs as neurons) layers of neurons
 + We pass iteratively from one layer to the next
-+ Therefore to understand why 
++ Therefore to understand the final outputs of a neural net, you need to
+  understand not only each layer in isolation, but their compositions
+    * This is hard!
 
 # Diagram of standard neural net
 
