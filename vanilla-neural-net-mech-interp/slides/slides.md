@@ -39,7 +39,8 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 
 # Uncertainty Remains
 
-+ 
++ How long until AGI?
++ How long for
 
 # Mechanistic Interpretability: One Bet
 
