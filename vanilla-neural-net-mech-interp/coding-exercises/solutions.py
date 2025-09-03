@@ -1359,19 +1359,22 @@ print(f"{top_key_value_pairs_for_img_of_four=}")
 
 # %% [markdown]
 """
-Note that when using this top set below, the model predicts a four.
+Let's do a quick sanity check to make sure that restricting these top key value
+pairs to an image of a four still has the model thinking that it's a 2.
 """
 
 # %%
 calculate_output_only_with_certain_kv_indices(
   models[MODEL_IDX_WE_ARE_USING], 
   image_of_four_in_test_set,
-  top_key_value_pairs_for_img_of_four[:8],
+  top_key_value_pairs_for_img_of_four,
 )
 
 # %% [markdown]
 """
-What does the model predict now if we use more key-value pairs?
+This image has a pretty interesting thing where if we look at the initial group
+of top activating key-value pairs, the model initially thinks that the image is
+in fact a 6.
 """
 
 # %%
@@ -1381,92 +1384,130 @@ calculate_output_only_with_certain_kv_indices(
   top_key_value_pairs_for_img_of_four[:15],
 )
 
+# %% [markdown]
+"""
+*Exercise*: Why does the model think that the image is a 6 with only the first 15
+top activating key-value pairs used? What is the general shape of the
+keys that activate for this and can you make sense of this?
+
+<details>
+<summary>Solution</summary>
+The model seems to detect sixes by mainly looking at blobs in the center of the
+image with a little bit of some stuff above the blob. You can look e.g. at
+`top_key_value_pairs_for_img_of_four[14]` or other examples in the solutions
+file for an example of this.
+</details>
+"""
+
 # %%
+# TODO: Scratch space for any code you want to write to come up with an explanation.
+# raise NotImplementedError()
+
+# These both seem to code heavily for sixes.
 visualize_ith_key_value_on_image(
   models[MODEL_IDX_WE_ARE_USING], 
   top_key_value_pairs_for_img_of_four[14], 
   image_of_four_in_test_set.squeeze(),
 )
+visualize_ith_key_value_on_image(
+  models[MODEL_IDX_WE_ARE_USING], 
+  top_key_value_pairs_for_img_of_four[13], 
+  image_of_four_in_test_set.squeeze(),
+)
+
+# %% [markdown]
+"""
+In fact, all the way up to the first 500 most highly activating key-value pairs,
+the model still thinks that the image is likely a 6.
+
+Somewhere between about the first 500 and first 700 most highly activating
+key-value pairs, the model goes from a 2 to a 6.
+"""
+
+# %%
+# Notice that if go up to the first 600, we start getting more confidence that
+# the image is a 2.
+output_of_first_600_kv_pairs = calculate_output_only_with_certain_kv_indices(
+  models[MODEL_IDX_WE_ARE_USING], 
+  image_of_four_in_test_set,
+  top_key_value_pairs_for_img_of_four[:600],
+)
+print(f"{output_of_first_600_kv_pairs=}")
+# And that if you go to the first 700 then it is very confident that the image
+# is a 2
+output_of_first_700_kv_pairs = calculate_output_only_with_certain_kv_indices(
+  models[MODEL_IDX_WE_ARE_USING], 
+  image_of_four_in_test_set,
+  top_key_value_pairs_for_img_of_four[:700],
+)
+print(f"{output_of_first_700_kv_pairs=}")
+
+# %% [markdown]
+"""
+*Exercise*: So why does the model go from thinking that the image is a 6 to
+thinking that the image is a 2?
+
+<details>
+<summary>Solution</summary>
+The explanation here again is a lot more tentative than for our previous image. You
+should retain some skepticism about this and if you have time, feel free to more
+thoroughly test this explanation!
+
+Basically, a lot of the key value pairs that strongly make the model think that
+an image is a 2 do so with a component that looks for a strong horizontal stripe
+(the bottom horizontal line of a 2). This just happens to line up very well with
+the lower-most blob of our image of a 4, which looks kind of like a single
+horizontal line.
+</details>
+"""
 
 # %%
 
-#finds key-value pairs that react almost only to one digit
-def find_values_with_mostly_zeroes(model):
-  values = model.fc2.weight
-  num_of_elems_close_to_0 = torch.abs(values) < 0.05
-  print(f"{values.shape=}")
-  print(f"{num_of_elems_close_to_0.shape=}")
-  nine_elems_close_to_0 = torch.sum(num_of_elems_close_to_0, dim=0) == 9
-  indices_with_one_non_zero_elem = torch.nonzero(nine_elems_close_to_0).squeeze()
-  large_total_sums = torch.nonzero(torch.sum(values, dim=0) > 0.18).squeeze()
-  print(f"{indices_with_one_non_zero_elem.shape=}")
-  large_total_sum_and_nine_elems_close_to_0 = indices_with_one_non_zero_elem[torch.isin(indices_with_one_non_zero_elem, large_total_sums)]
-  print(f"{large_total_sum_and_nine_elems_close_to_0=}")
+# It might be useful to start here with a list of all the kv pairs that activate
+# strongly for 2 on this particular image
+key_values_indices_that_code_strongly_for_2 = []
 
-find_values_with_mostly_zeroes(models[MODEL_IDX_WE_ARE_USING])
+for kv_pair_idx in top_key_value_pairs_for_img_of_four[:600]:
+  _, values = calculate_kv_activation_for_specific_kv(models[MODEL_IDX_WE_ARE_USING], image_of_four_in_test_set, kv_pair_idx)
+  if values[2] > 0.5:
+    key_values_indices_that_code_strongly_for_2.append(kv_pair_idx)
 
-# %%
+print(f"{key_values_indices_that_code_strongly_for_2=}")
 
-# TODO: visualize the two key-value pairs, especially pair 905
+# Unsurprisingly just using these values will make the model highly think that
+# the image is a 2.
+result_of_just_using_kv_indices_coding_strongly_for_2 = calculate_output_only_with_certain_kv_indices(
+  models[MODEL_IDX_WE_ARE_USING], 
+  image_of_four_in_test_set,
+  key_values_indices_that_code_strongly_for_2,
+)
+print(f"{result_of_just_using_kv_indices_coding_strongly_for_2=}")
+
+# TODO: Scratch space for any code you want to write to come up with an explanation.
 # raise NotImplementedError()
 
-visualize_ith_key_value(models[MODEL_IDX_WE_ARE_USING].cpu(), 905)
+for kv_idx in key_values_indices_that_code_strongly_for_2[:10]:
+  visualize_ith_key_value_on_image(
+    models[MODEL_IDX_WE_ARE_USING], 
+    kv_idx, 
+    image_of_four_in_test_set.squeeze(),
+  )
 
-# %%
+# %% [markdown]
+"""
+Our final main objective, before our bonus exercises, is to use the knowledge
+that we've gained here to selectively knock out the model's ability to recognize
+a single digit, without needing to resort to gradient descent to retrain the
+model.
 
-# this is an image of a 2, the digit which pair 905 reacts strongly to 
-visualize_image(train_dataset[5][0].cpu().squeeze())
+If we can do that, we've demonstrated a certain level of surgical insight into
+the model that goes beyond the standard "black box" thinking.
 
-# %%
+Make sure you understand what's going on with `knock_out_ith_key` and
+`find_values_for_digit_over_threshold`.
 
-list_top_kv_pair_idxs(models[MODEL_IDX_WE_ARE_USING], train_dataset[5][0].cpu(), 5500)
-
-# %%
-
-# However, what do you see in the interaction between pair 905 and the image?
-visualize_ith_key_value_on_image(models[MODEL_IDX_WE_ARE_USING].cpu(), 905, train_dataset[5][0].cpu().squeeze())
-
-# %%
-
-visualize_image(train_dataset[3][0].cpu().squeeze())
-
-# %%
-
-# Let's now look at the smallest model
-# and compare it to what we saw before
-list_top_kv_pair_idxs(models[0].cpu(), train_dataset[3][0].cpu(), 10_000)
-
-# %%
-
-models[0].cpu()(train_dataset[3][0].cpu()).squeeze()
-
-# %%
-
-visualize_ith_key_value_on_image(models[0].cpu(), 7, train_dataset[3][0].cpu().squeeze())
-
-# %%
-
-# This finds the image that activates mostly strongly for a given key.
-
-def sort_highest_activating_image_for_key(model, key_value_idx, input_images):
-  key = model.fc1.weight[key_value_idx, :]
-  print(f"{input_images.shape=}")
-  flattened_images = model.flatten(input_images)
-  dot_products = einops.einsum(key, flattened_images, "key_dim, batch key_dim -> batch")
-  _, indices_by_dot_product = torch.sort(dot_products, descending=True)
-  return indices_by_dot_product
-
-train_images = torch.stack([img for img, _ in train_dataset])
-
-result = sort_highest_activating_image_for_key(models[MODEL_IDX_WE_ARE_USING].cpu(), 905, train_images.cpu())
-
-print(f"{result=}")
-
-visualize_image(train_images[result][5].cpu().squeeze())
-
-# %%
-
-visualize_ith_key_value_on_image(models[MODEL_IDX_WE_ARE_USING].cpu(), 905, train_dataset[2019][0].cpu().squeeze())
+We'll be using that to knock out the model's ability to recognize 0s.
+"""
 
 # %%
 
@@ -1513,13 +1554,11 @@ def knock_out_ith_key(model: SimpleNN, key_value_idx: torch.Tensor) -> SimpleNN:
     new_model.fc1.bias = torch.nn.Parameter(delete_by_index(model.fc1.bias, key_value_idx))
     new_model.fc2.weight = torch.nn.Parameter(delete_by_index(model.fc2.weight, key_value_idx, dim=1))
     return new_model
-  
-#
-
-# %%
 
 def find_values_for_digit_over_threshold(model, digit, threshold=0.3):
   return torch.tensor([idx for idx in range(model.fc2.weight.shape[1]) if model.fc2.weight[digit, idx] > threshold])
+
+# %%
 
 # Find all those key-value pairs which activate a lot for zero
 all_values_that_activate_significantly_for_zero = find_values_for_digit_over_threshold(models[MODEL_IDX_WE_ARE_USING], 0, threshold=0.1)
@@ -1534,4 +1573,81 @@ model_with_0_knocked_out = knock_out_ith_key(models[MODEL_IDX_WE_ARE_USING], all
 # And now we see that the model is basically entirely incapable of recognizing 0, but the rest of its capabilities are left intact!
 accuracy_by_digit(model_with_0_knocked_out.to(DEVICE), test_loader)
 
+# %% [markdown]
+"""
+*Exercise*: Can you do a similar thing for the digit 9, where we knock out the model's ability to recognize 9s?
+"""
+
 # %%
+# TODO: Scratchpad for exercise
+# raise NotImplementedError()
+
+# Find all those key-value pairs which activate a lot for zero
+all_values_that_activate_significantly_for_nine = find_values_for_digit_over_threshold(models[MODEL_IDX_WE_ARE_USING], 9, threshold=0.05)
+
+# Let's see if we can just selectively knock those out!
+model_with_9_knocked_out = knock_out_ith_key(models[MODEL_IDX_WE_ARE_USING], all_values_that_activate_significantly_for_nine)
+
+# And now we see that the model is basically entirely incapable of recognizing 0, but the rest of its capabilities are left intact!
+accuracy_by_digit(model_with_9_knocked_out.to(DEVICE), test_loader)
+
+# %% [markdown]
+"""
+*Bonus Exercise*: Can you put everything together that we've learned so far in
+this workshop to craft an image that you think the neural net will get wrong?
+Even better can you predict what label the net will assign to the image
+instead?
+
+Feel free to do whatever analysis you want on the net, the only constraint is
+that you're not allowed to pass the image through the net itself (since that
+would be giving away the answer!)
+
+If you can do this without running the image through the net beforehand, this
+will demonstrate that you've pretty deeply understood the net!
+"""
+
+# %%
+# TODO: Scratchpad for exercise
+# raise NotImplementedError()
+
+# Here's our example, where the model gets a 6 very wrong because it expects 6s
+# to have big blobs in the middle of the image.
+tester = (torch.tensor(
+[[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+]).to(torch.float))
+
+visualize_image(tester)
+
+models[13](tester.unsqueeze(0))
+# %% [markdown]
+"""
+*Bonus Exercise*: Visualize some of the key value pairs of the smallest model, both independently and on an image
+Are the visualizations explainable? Could you infer what some of the key-value pairs are doing?
+"""
