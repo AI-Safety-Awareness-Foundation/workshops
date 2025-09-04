@@ -1369,7 +1369,10 @@ models[MODEL_IDX_WE_ARE_USING].cpu()(image_of_four_in_test_set)
 # %% [markdown]
 """
 Like before, we can use `list_top_kv_pair_idxs` to find a set of most signficant
-key-value pairs
+key-value pairs. You might notice that `excess_abs_weight` is substantially
+lower than for our previous images. This is because although it ultimately ends
+up very confident, this model flips back and forth on deciding whether this a 2
+a lot!
 """
 # %%
 top_key_value_pairs_for_img_of_four = list_top_kv_pair_idxs(models[MODEL_IDX_WE_ARE_USING].cpu(), image_of_four_in_test_set, 500)
