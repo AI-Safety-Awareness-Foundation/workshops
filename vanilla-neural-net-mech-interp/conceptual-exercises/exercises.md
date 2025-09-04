@@ -8,7 +8,7 @@
 
 <details>
 <summary>Solution</summary>
-$\text{ReLU}(2.0 \cdot 0.5 + 1.5 \cdot -0.1) = 0.85$
+$\text{ReLU}(2.0 \cdot 0.5 + 1.5 \cdot -0.1) + 1.3 = 2.15$
 </details>
 
 *Exercise*:
@@ -21,13 +21,14 @@ $\text{ReLU}(2.0 \cdot 0.5 + 1.5 \cdot -0.1) = 0.85$
 
 <details>
 <summary>Solution</summary>
-$\text{ReLU}(0.1 \cdot 0.5 + 5 \cdot -0.1) = 0$
+$\text{ReLU}(0.1 \cdot 0.5 + 5 \cdot -0.1) + 1.3 = 1.3$
 </details>
 
 *Exercise*: 
 
 > Given the following diagram, calculate what the output of the neural net
-> should be "layer by layer" in the traditional way.
+> should be "layer by layer" in the traditional way
+> using inputs 1.5 and -0.8.
 > ![exercise diagram](./exercise-question.jpeg)
 
 <details>
@@ -40,7 +41,9 @@ $\text{ReLU}(0.1 \cdot 0.5 + 5 \cdot -0.1) = 0$
 *Exercise*: 
 
 > Given the following diagram, calculate what the output of the neural net
-> should be in our "key-value" decomposition of a vanilla neural net.
+> should be in our "key-value" decomposition of a
+> vanilla neural net using inputs 1.5 and -0.8
+> again.
 > ![exercise diagram](./exercise-question.jpeg)
 
 <details>
