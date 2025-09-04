@@ -481,6 +481,34 @@ hidden_dims = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 3276
 models = [SimpleNN(hidden_dim) for hidden_dim in hidden_dims]
 
 MODEL_IDX_WE_ARE_USING=13
+
+# %% [markdown]
+"""
+Now that we have the MNIST dataset, we can examine some pictures from it. As a
+reminder, our neural net will **recognize the handwritten digits from this
+dataset and assign them a label of 0-9**.
+"""
+
+# %%
+# To understand the indexing of a dataset, the first index is the image index
+# and the second index is whether it is the image data itself or the label.
+#
+# For example let's assume the 12th image in our training dataset is an image of
+# a 7. `train_dataset[12][0]` selects the 12th image's image data (which will be
+# some 1x28x28 tensor). `train_dataset[12][1]` selects the 12th image's label
+# data (which will be a vector 10 elements long with a 1 at the 8th index (7 + 1
+# for zero indexing) and a 0 everywhere else).
+image_in_training_set = train_dataset[0][0].cpu()
+
+# We need to squeeze because MNIST by default has images with 4 dimensions:
+# batch, color channel, height, and width. The color channel is always 1 since
+# all the images are grayscale, so we can simply `squeeze` that dimension away.
+visualize_image(image_in_training_set.squeeze())
+
+# The same kind of images are used in the test dataset, we just don't
+image_in_test_dataset = test_dataset[1][0].cpu()
+visualize_image(image_in_test_dataset.squeeze())
+
 # %% [markdown]
 """
 Once more, you should run the following code block, but you do not need to actually read
@@ -801,11 +829,13 @@ of 0s. Do the keys actually look like zeros?
 
 # raise NotImplementedError("")
 
+#BEGIN SOLUTION
 digit_to_analyze = 0
 
 indices_that_fire_mainly_on_select_digit = find_values_for_sole_digit(models[MODEL_IDX_WE_ARE_USING], digit_to_analyze)
 for idx in indices_that_fire_mainly_on_select_digit[:3]:
   visualize_ith_key_value(models[MODEL_IDX_WE_ARE_USING].to("cpu"), idx)
+#END SOLUTION
 
 # %% [markdown]
 """
@@ -831,6 +861,8 @@ model's training set, an image of a 0.
 """
 
 # %%
+# We explored this earlier, but we'll copy this again from before.
+#
 # To understand the indexing of a dataset, the first index is the image index
 # and the second index is whether it is the image data itself or the label.
 #
@@ -856,7 +888,9 @@ visualize_image(image_of_zero_in_training_set.squeeze())
 # TODO: First correctly index `train_dataset`, and then call `visualize_image`
 # raise NotImplementedError("")
 
+#BEGIN SOLUTION
 visualize_image(train_dataset[10][0].cpu().squeeze())
+#END SOLUTION
 
 # %% [markdown]
 """
@@ -1002,6 +1036,7 @@ overlap with 0.
 # activating key pairs for `image_of_zero_in_training_set`
 
 # raise NotImplementedError()
+#BEGIN SOLUTION
 second_highest_activation_kv = top_key_value_pairs_for_img_of_zero[1]
 print(f"{second_highest_activation_kv=}")
 visualize_ith_key_value_on_image(models[MODEL_IDX_WE_ARE_USING], second_highest_activation_kv, image_of_zero_in_training_set.squeeze())
@@ -1011,6 +1046,7 @@ third_highest_activation_kv = top_key_value_pairs_for_img_of_zero[2]
 print(f"{third_highest_activation_kv=}")
 visualize_ith_key_value_on_image(models[MODEL_IDX_WE_ARE_USING], third_highest_activation_kv, image_of_zero_in_training_set.squeeze())
 visualize_image(image_of_zero_in_training_set.squeeze())
+#END SOLUTION
 
 # %% [markdown]
 """
@@ -1271,6 +1307,7 @@ of other digits to piece them together.
 # TODO: Scratch space for any code you want to write to come up with an explanation.
 # raise NotImplementedError()
 
+#BEGIN SOLUTION
 # Let's see which key-value pairs prefer 1.
 key_value_indices_that_prefer_1 = []
 for kv_pair_idx in top_key_value_pairs_for_img_of_one:
@@ -1302,6 +1339,7 @@ for idx in key_value_indices_that_prefer_7_over_1[:5]:
     idx, 
     image_of_one_in_training_set.squeeze()
   )
+#END SOLUTION
 
 # %% [markdown]
 """
@@ -1437,6 +1475,7 @@ file for an example of this.
 # TODO: Scratch space for any code you want to write to come up with an explanation.
 # raise NotImplementedError()
 
+#BEGIN SOLUTION
 # These both seem to code heavily for sixes.
 visualize_ith_key_value_on_image(
   models[MODEL_IDX_WE_ARE_USING], 
@@ -1448,6 +1487,7 @@ visualize_ith_key_value_on_image(
   top_key_value_pairs_for_img_of_four[13], 
   image_of_four_in_test_set.squeeze(),
 )
+#END SOLUTION
 
 # %% [markdown]
 """
@@ -1520,12 +1560,14 @@ print(f"{result_of_just_using_kv_indices_coding_strongly_for_2=}")
 # TODO: Scratch space for any code you want to write to come up with an explanation.
 # raise NotImplementedError()
 
+#BEGIN SOLUTION
 for kv_idx in key_values_indices_that_code_strongly_for_2[:10]:
   visualize_ith_key_value_on_image(
     models[MODEL_IDX_WE_ARE_USING], 
     kv_idx, 
     image_of_four_in_test_set.squeeze(),
   )
+#END SOLUTION
 
 # %% [markdown]
 """
@@ -1616,6 +1658,7 @@ accuracy_by_digit(model_with_0_knocked_out.to(DEVICE), test_loader)
 # TODO: Scratchpad for exercise
 # raise NotImplementedError()
 
+#BEGIN SOLUTION
 # Find all those key-value pairs which activate a lot for zero
 all_values_that_activate_significantly_for_nine = find_values_for_digit_over_threshold(models[MODEL_IDX_WE_ARE_USING], 9, threshold=0.05)
 
@@ -1624,6 +1667,7 @@ model_with_9_knocked_out = knock_out_ith_key(models[MODEL_IDX_WE_ARE_USING], all
 
 # And now we see that the model is basically entirely incapable of recognizing 0, but the rest of its capabilities are left intact!
 accuracy_by_digit(model_with_9_knocked_out.to(DEVICE), test_loader)
+#END SOLUTION
 
 # %% [markdown]
 """
@@ -1644,6 +1688,7 @@ will demonstrate that you've pretty deeply understood the net!
 # TODO: Scratchpad for exercise
 # raise NotImplementedError()
 
+#BEGIN SOLUTION
 # Here's our example, where the model gets a 6 very wrong because it expects 6s
 # to have big blobs in the middle of the image.
 tester = (torch.tensor(
@@ -1680,6 +1725,7 @@ tester = (torch.tensor(
 visualize_image(tester)
 
 models[13](tester.unsqueeze(0))
+#END SOLUTION
 # %% [markdown]
 """
 *Bonus Exercise*: Visualize some of the key value pairs of the smallest model, both independently and on an image

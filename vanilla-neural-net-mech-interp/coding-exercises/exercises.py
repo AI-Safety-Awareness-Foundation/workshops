@@ -481,6 +481,34 @@ hidden_dims = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 3276
 models = [SimpleNN(hidden_dim) for hidden_dim in hidden_dims]
 
 MODEL_IDX_WE_ARE_USING=13
+
+# %% [markdown]
+"""
+Now that we have the MNIST dataset, we can examine some pictures from it. As a
+reminder, our neural net will **recognize the handwritten digits from this
+dataset and assign them a label of 0-9**.
+"""
+
+# %%
+# To understand the indexing of a dataset, the first index is the image index
+# and the second index is whether it is the image data itself or the label.
+#
+# For example let's assume the 12th image in our training dataset is an image of
+# a 7. `train_dataset[12][0]` selects the 12th image's image data (which will be
+# some 1x28x28 tensor). `train_dataset[12][1]` selects the 12th image's label
+# data (which will be a vector 10 elements long with a 1 at the 8th index (7 + 1
+# for zero indexing) and a 0 everywhere else).
+image_in_training_set = train_dataset[0][0].cpu()
+
+# We need to squeeze because MNIST by default has images with 4 dimensions:
+# batch, color channel, height, and width. The color channel is always 1 since
+# all the images are grayscale, so we can simply `squeeze` that dimension away.
+visualize_image(image_in_training_set.squeeze())
+
+# The same kind of images are used in the test dataset, we just don't
+image_in_test_dataset = test_dataset[1][0].cpu()
+visualize_image(image_in_test_dataset.squeeze())
+
 # %% [markdown]
 """
 Once more, you should run the following code block, but you do not need to actually read
@@ -801,6 +829,7 @@ of 0s. Do the keys actually look like zeros?
 
 raise NotImplementedError("")
 
+
 # %% [markdown]
 """
 We've been able to identify interesting key-value pairs, but we have no
@@ -825,6 +854,8 @@ model's training set, an image of a 0.
 """
 
 # %%
+# We explored this earlier, but we'll copy this again from before.
+#
 # To understand the indexing of a dataset, the first index is the image index
 # and the second index is whether it is the image data itself or the label.
 #
@@ -849,6 +880,7 @@ visualize_image(image_of_zero_in_training_set.squeeze())
 # %%
 # TODO: First correctly index `train_dataset`, and then call `visualize_image`
 raise NotImplementedError("")
+
 
 # %% [markdown]
 """
@@ -983,7 +1015,9 @@ which ones and does it make sense that they are selecting for those as well?
 
 <details>
 <summary>Solution</summary>
-You should notice that all these highly 
+You should notice that all these highly fire for 2s as well. This makes sense
+because the part of the 2 that is not the bottom horizontal line has a lot of
+overlap with 0.
 </details>
 """
 
@@ -1130,6 +1164,17 @@ def calculate_kv_activation_for_specific_kv(model, img, kv_idx):
 
 # TODO: Scratch space for any code you want to write to come up with an explanation.
 
+# The following is one example of some code you might write
+key_value_indices_that_prefer_0_over_2 = []
+for kv_pair_idx in top_key_value_pairs_for_img_of_zero[5:]:
+  _, values = calculate_kv_activation_for_specific_kv(models[MODEL_IDX_WE_ARE_USING], image_of_zero_in_training_set, kv_pair_idx)
+  if values[0] > values[2]:
+    key_value_indices_that_prefer_0_over_2.append(kv_pair_idx)
+
+# Let's visualize all of the key-value pairs that prefer 0 over 2.
+for kv_pair_idx in key_value_indices_that_prefer_0_over_2:
+  visualize_ith_key_value_on_image(models[MODEL_IDX_WE_ARE_USING], kv_pair_idx, image_of_zero_in_training_set.squeeze())
+
 # %% [markdown]
 """
 At this point we have some idea of how the model is able to recognize our chosen
@@ -1216,8 +1261,8 @@ calculate_output_only_with_certain_kv_indices(
 # %% [markdown]
 """
 *Exercise*: Attempt to explain how the model is able to conclude that this image
-*is in fact a 1. Why do you think that how the neural net is able to conclude
-*that the image is a 1 is far more messy than for a 0?
+is in fact a 1. Why do you think that how the neural net is able to conclude
+that the image is a 1 is far more messy than for a 0?
 
 <details>
 <summary>Solution</summary>
@@ -1240,6 +1285,7 @@ of other digits to piece them together.
 # %%
 # TODO: Scratch space for any code you want to write to come up with an explanation.
 raise NotImplementedError()
+
 
 # %% [markdown]
 """
@@ -1382,7 +1428,7 @@ In fact, all the way up to the first 500 most highly activating key-value pairs,
 the model still thinks that the image is likely a 6.
 
 Somewhere between about the first 500 and first 700 most highly activating
-key-value pairs, the model goes from a 2 to a 6.
+key-value pairs, the model goes from a 6 to a 2.
 """
 
 # %%
@@ -1446,6 +1492,7 @@ print(f"{result_of_just_using_kv_indices_coding_strongly_for_2=}")
 
 # TODO: Scratch space for any code you want to write to come up with an explanation.
 raise NotImplementedError()
+
 
 # %% [markdown]
 """
@@ -1536,6 +1583,7 @@ accuracy_by_digit(model_with_0_knocked_out.to(DEVICE), test_loader)
 # TODO: Scratchpad for exercise
 raise NotImplementedError()
 
+
 # %% [markdown]
 """
 *Bonus Exercise*: Can you put everything together that we've learned so far in
@@ -1555,7 +1603,6 @@ will demonstrate that you've pretty deeply understood the net!
 # TODO: Scratchpad for exercise
 raise NotImplementedError()
 
-models[13](tester.unsqueeze(0))
 # %% [markdown]
 """
 *Bonus Exercise*: Visualize some of the key value pairs of the smallest model, both independently and on an image
