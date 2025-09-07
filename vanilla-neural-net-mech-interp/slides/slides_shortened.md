@@ -24,25 +24,17 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
     - Reliably control
     - Comprehensively debug
 
-# Technical AI Safety Problems
-
 # Note 
 
 + There are a host of other social AI safety problems
     - Who gets to decide what an AI should do?
     - How should society decide what to do with AI?
-+ Today we're focused on the technical problem
++ Today we're focused on the technical side
 
 # We Might Not Have a Lot of Time
 
 + AI companies think there's a chance we might get AGI very soon
 + [Video of Anthropic CEO](https://www.youtube.com/watch?v=7LNyUbii0zw&t=128s)
-
-# Uncertainty Remains
-
-+ How long until AGI?
-+ What does achieving AGI actually look like?
-+ How much will current architectural designs hold?
 
 # Mechanistic Interpretability: One Bet
 
@@ -53,7 +45,7 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
     - Verify alignment with designer objectives
 + **Reality**: Current progress is promising but severely limited
 
-# Why Study Mechanistic Interpretability Anyway?
+# Why Study Mechanistic Interpretability?
 
 1. **Building foundations**: Today's toy models teach us techniques for tomorrow's challenges
 2. **Developing intuitions**: Understanding simple systems helps us reason about complex ones
@@ -83,7 +75,7 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 + This is one of the most urgent technical challenges in the world at the moment
     - Which is why we need more brilliant people working on this!
 + **We have many bets, but we don't know if one or any will pan out.**
-    - This is a bad situation!
+    - This is very bad
     - But not hopeless: this is where AI capabilities was before LLMs rolled around
     - We have hope that one bet will work, but unsure which one
 

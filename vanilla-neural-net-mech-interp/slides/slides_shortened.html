@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title>slides_shortened</title>
+  <style type="text/css">
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="https://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="https://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div id="mechanistic-interpretability-on-vanilla-neural-nets-workshop"
+class="slide section level1">
+<h1>Mechanistic Interpretability on Vanilla Neural Nets Workshop</h1>
+<p>Understanding How a Vanilla Neural Net Does Image Detection from the
+Inside Out</p>
+</div>
+<div id="overall-structure-today" class="slide section level1">
+<h1>Overall Structure Today</h1>
+<ul class="incremental">
+<li>We’ll assume:
+<ul class="incremental">
+<li>You have some basic Python knowledge</li>
+<li>You’ve built and trained a basic neural net in the past</li>
+</ul></li>
+<li>We’ll be doing:
+<ul class="incremental">
+<li>Quick overview of mech interp and how we’re using it today</li>
+<li>Some conceptual exercises</li>
+<li>Some coding exercises where we play around with real neural net
+models and try to understand how they do image recognition</li>
+</ul></li>
+</ul>
+</div>
+<div id="the-ai-safety-challenge" class="slide section level1">
+<h1>The AI Safety Challenge</h1>
+<ul class="incremental">
+<li>We are building increasingly powerful AI systems</li>
+<li>Current trajectory points toward AGI (Artificial General
+Intelligence) and potentially ASI (Artificial Superintelligence)</li>
+<li><strong>Critical problem</strong>: We don’t understand how to
+actually make these increasingly capable systems reliably do what we
+want</li>
+<li>We deploy systems we cannot:
+<ul class="incremental">
+<li>Fully predict</li>
+<li>Reliably control</li>
+<li>Comprehensively debug</li>
+</ul></li>
+</ul>
+</div>
+<div id="note" class="slide section level1">
+<h1>Note</h1>
+<ul class="incremental">
+<li>There are a host of other social AI safety problems
+<ul class="incremental">
+<li>Who gets to decide what an AI should do?</li>
+<li>How should society decide what to do with AI?</li>
+</ul></li>
+<li>Today we’re focused on the technical side</li>
+</ul>
+</div>
+<div id="we-might-not-have-a-lot-of-time" class="slide section level1">
+<h1>We Might Not Have a Lot of Time</h1>
+<ul class="incremental">
+<li>AI companies think there’s a chance we might get AGI very soon</li>
+<li><a
+href="https://www.youtube.com/watch?v=7LNyUbii0zw&amp;t=128s">Video of
+Anthropic CEO</a></li>
+</ul>
+</div>
+<div id="mechanistic-interpretability-one-bet"
+class="slide section level1">
+<h1>Mechanistic Interpretability: One Bet</h1>
+<ul class="incremental">
+<li><strong>Goal</strong>: Reverse-engineer neural networks to
+understand their internal mechanisms</li>
+<li><strong>Promise</strong>: If we can understand how models work, we
+might:
+<ul class="incremental">
+<li>Detect deception</li>
+<li>Identify dangerous capabilities</li>
+<li>Verify alignment with designer objectives</li>
+</ul></li>
+<li><strong>Reality</strong>: Current progress is promising but severely
+limited</li>
+</ul>
+</div>
+<div id="why-study-mechanistic-interpretability"
+class="slide section level1">
+<h1>Why Study Mechanistic Interpretability?</h1>
+<ol class="incremental" style="list-style-type: decimal">
+<li><strong>Building foundations</strong>: Today’s toy models teach us
+techniques for tomorrow’s challenges</li>
+<li><strong>Developing intuitions</strong>: Understanding simple systems
+helps us reason about complex ones</li>
+<li><strong>Creating tools</strong>: Methods developed now may scale
+with future innovations</li>
+<li><strong>Inspiring solutions</strong>: Deep understanding often
+precedes breakthrough insights</li>
+<li><strong>It’s plain beautiful</strong>: Mechanistic interpretability
+can be fun!</li>
+</ol>
+</div>
+<div id="current-state-of-the-field" class="slide section level1">
+<h1>Current State of the Field</h1>
+<h2 id="what-we-can-do">What we can do:</h2>
+<ul class="incremental">
+<li>Identify some circuits in small models</li>
+<li>Understand basic features in vision models</li>
+<li>Find some interpretable directions in language models</li>
+</ul>
+<h2 id="what-we-cannot-do">What we <strong>cannot</strong> do:</h2>
+<ul class="incremental">
+<li>Fully interpret even small LLMs</li>
+<li>Build robust and comprehensive detectors of things like deception
+(although there’s some promising sparks!)</li>
+<li>Robustly predict emergent capabilities</li>
+</ul>
+</div>
+<div id="disclaimer" class="slide section level1">
+<h1>Disclaimer</h1>
+<ul class="incremental">
+<li><strong>No current AI safety approach is confidently on track to
+solve AGI/ASI alignment</strong>
+<ul class="incremental">
+<li>There are reasons to doubt the viability of any single approach</li>
+<li>This including mechanistic interpretability!</li>
+</ul></li>
+<li>The gap between our understanding and our capabilities is
+<strong>growing</strong>, not shrinking</li>
+<li>This is one of the most urgent technical challenges in the world at
+the moment
+<ul class="incremental">
+<li>Which is why we need more brilliant people working on this!</li>
+</ul></li>
+<li><strong>We have many bets, but we don’t know if one or any will pan
+out.</strong>
+<ul class="incremental">
+<li>This is very bad</li>
+<li>But not hopeless: this is where AI capabilities was before LLMs
+rolled around</li>
+<li>We have hope that one bet will work, but unsure which one</li>
+</ul></li>
+</ul>
+</div>
+<div id="todays-object-of-study" class="slide section level1">
+<h1>Today’s Object of Study</h1>
+<ul class="incremental">
+<li>We’ll study a <strong>vanilla neural network</strong> - vastly
+simpler than modern systems</li>
+<li>Even this simple model exhibits surprising complexity</li>
+<li>You’ll learn fundamental mechanistic interpretability
+techniques</li>
+<li>The general contour of the work applies to larger models and more
+complex architectures</li>
+</ul>
+</div>
+<div id="common-themes-of-mechanistic-interpretability"
+class="slide section level1">
+<h1>Common themes of mechanistic interpretability</h1>
+<ul class="incremental">
+<li>Finding mathematically equivalent or near-equivalent restructurings
+of an architecture</li>
+<li>Being able to identify specific, concrete parts of a model that are
+responsible for different capabilities</li>
+</ul>
+</div>
+<div id="what-youll-be-able-to-do-at-the-end-of-the-day"
+class="slide section level1">
+<h1>What you’ll be able to do at the end of the day</h1>
+<ul class="incremental">
+<li>Get a new look at the traditional vanilla neural net
+architecture</li>
+<li>Thoroughly and mechanistically explain why the NN gets certain
+digits wrong (and right)</li>
+</ul>
+</div>
+<div id="standard-way-of-thinking-about-a-single-hidden-layer-nn"
+class="slide section level1">
+<h1>Standard way of thinking about a single hidden layer NN</h1>
+<ul class="incremental">
+<li>There are two (three if you count inputs as neurons) layers of
+neurons</li>
+<li>We pass iteratively from one layer to the next</li>
+<li>Therefore to understand the final outputs of a neural net, you need
+to understand not only each layer in isolation, but their compositions
+<ul class="incremental">
+<li>This is hard!</li>
+</ul></li>
+</ul>
+</div>
+<div id="diagram-of-standard-neural-net" class="slide section level1">
+<h1>Diagram of standard neural net</h1>
+<p><img src="./neural-net.svg"/></p>
+</div>
+<div id="standard-layer-by-layer-decomposition"
+class="slide section level1">
+<h1>Standard layer by layer decomposition</h1>
+<p><img src="./neural-net-layer-decomposition.svg" width="500px"/></p>
+</div>
+<div id="alternative-decomposition-key-value"
+class="slide section level1">
+<h1>Alternative decomposition: key-value</h1>
+<p><img src="./neural-net-key-value-decomposition.svg" width="700px"/></p>
+</div>
+<div id="calculate-as-key-value-decomposition"
+class="slide section level1">
+<h1>Calculate as “key-value” decomposition</h1>
+<p><img src="./neural-net-key-value-calculation.svg" width="500px"/></p>
+</div>
+<div id="concrete-example" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network.svg" width="600px"/></p>
+</div>
+<div id="concrete-example-1" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network-first-kv-pair.svg" width="300px"/></p>
+<p><img src="./calculated-network-second-kv-pair.svg" width="300px"/></p>
+</div>
+<div id="concrete-example-2" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-1.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-3" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network-input-0.svg" width="600px"/></p>
+</div>
+<div id="concrete-example-4" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-2.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-5" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network-input-1.svg" width="600px"/></p>
+</div>
+<div id="concrete-example-6" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-3.svg" width="700px"/></p>
+</div>
+<div id="concrete-example-7" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./calculated-network-input-2.svg" width="600px"/></p>
+</div>
+<div id="concrete-example-8" class="slide section level1">
+<h1>Concrete Example</h1>
+<p><img src="./neural-net-example-4.svg" width="700px"/></p>
+</div>
+</body>
+</html>
