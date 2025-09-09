@@ -10,8 +10,8 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 + We'll be doing:
     - Quick overview of mech interp and how we're using it today
     - Some conceptual exercises
-    - Some coding exercises where we play around with real neural net models and try to
-      understand how they do image recognition
+    - Some coding exercises where we play around with a real neural net and try to
+      understand how it does image recognition
 
 # The AI Safety Challenge
 
@@ -23,13 +23,7 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
     - Fully predict
     - Reliably control
     - Comprehensively debug
-
-# Note 
-
-+ There are a host of other social AI safety problems
-    - Who gets to decide what an AI should do?
-    - How should society decide what to do with AI?
-+ Today we're focused on the technical side
++ There are a host of social AI safety problems, but today we are focused on the technical side
 
 # We Might Not Have a Lot of Time
 
@@ -75,7 +69,7 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 + This is one of the most urgent technical challenges in the world at the moment
     - Which is why we need more brilliant people working on this!
 + **We have many bets, but we don't know if one or any will pan out.**
-    - This is very bad
+    - This is bad
     - But not hopeless: this is where AI capabilities was before LLMs rolled around
     - We have hope that one bet will work, but unsure which one
 
