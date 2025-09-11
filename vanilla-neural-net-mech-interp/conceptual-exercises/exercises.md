@@ -29,6 +29,7 @@ $\text{ReLU}(0.1 \cdot 0.5 + 5 \cdot -0.1) + 1.3 = 1.3$
 > Given the following diagram, calculate what the output of the neural net
 > should be "layer by layer" in the traditional way
 > using inputs 1.5 and -0.8.
+>
 > ![exercise diagram](./exercise-question.jpeg)
 
 <details>
@@ -44,6 +45,7 @@ $\text{ReLU}(0.1 \cdot 0.5 + 5 \cdot -0.1) + 1.3 = 1.3$
 > should be in our "key-value" decomposition of a
 > vanilla neural net using inputs 1.5 and -0.8
 > again.
+>
 > ![exercise diagram](./exercise-question.jpeg)
 
 <details>
