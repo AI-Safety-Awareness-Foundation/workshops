@@ -155,3 +155,19 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 
 <img src="./neural-net-example-4.svg" width="700px"/>
 
+# Conceptual Exercises 
+
++ Gain familiarity with the key-value pair framework
++ Pen-paper calculations 
+
+# Coding Exercises 
++ Jupyter Notebook on Colab  
++ Explores a single hidden layer neural network trained on MNIST  
++ Apply the key-value pair decomposition to understand and visualize 
+  how the neural network classifies digits
+
+<div style="display: flex; justify-content:center">
+<img src="./coding-exercise-example-2-image.jpg" width="330px">
+<img src="./coding-exercise-example-2-pair.jpg" width="300px">
+<img src="./coding-exercise-example-2-dot.jpg" width="330px">
+</div>
