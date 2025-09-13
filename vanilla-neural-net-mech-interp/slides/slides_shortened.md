@@ -175,3 +175,11 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 <img src="./coding-exercise-example-2-pair.jpg" width="300px">
 <img src="./coding-exercise-example-2-dot.jpg" width="330px">
 </div>
+
+# Real AI Safety Research (with MAIA members!)
++ Robust Feature-Level Adversaries are Interpretability Tools
+  - Mech Interp reseaarch analyzing adversarial attacks on computer vision models 
++ Alignment faking in large language models
+  - Demonstration of selective compliance with training objective in realistic scenarios
++ And more!
+
