@@ -17,8 +17,7 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 
 + We are building increasingly powerful AI systems
 + Current trajectory points toward AGI (Artificial General Intelligence) and potentially ASI (Artificial Superintelligence)
-+ **Critical problem**: We don't understand how to actually make these
-  increasingly capable systems reliably do what we want
++ **We don't understand how to actually make these increasingly capable systems reliably do what we want**
 + We deploy systems we cannot:
     - Fully predict
     - Reliably control
@@ -46,20 +45,12 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 
 # Mechanistic Interpretability: One Bet
 
-+ **Goal**: Reverse-engineer neural networks to understand their internal mechanisms
-+ **Promise**: If we can understand how models work, we might:
++ Reverse-engineer neural networks to understand their internal mechanisms
++ If we can understand how models work, we might:
     - Detect deception
     - Identify dangerous capabilities
     - Verify alignment with designer objectives
-+ **Reality**: Current progress is promising but severely limited
-
-# Why Study Mechanistic Interpretability Anyway?
-
-1. **Building foundations**: Today's toy models teach us techniques for tomorrow's challenges
-2. **Developing intuitions**: Understanding simple systems helps us reason about complex ones
-3. **Creating tools**: Methods developed now may scale with future innovations
-4. **Inspiring solutions**: Deep understanding often precedes breakthrough insights
-5. **It's plain beautiful**: Mechanistic interpretability can be fun!
++ Current progress is promising but severely limited
 
 # Current State of the Field
 
@@ -67,6 +58,7 @@ Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 + Identify some circuits in small models
 + Understand basic features in vision models
 + Find some interpretable directions in language models
++ This is *way* better than where we were four years ago!
 
 ## What we **cannot** do:
 + Fully interpret even small LLMs

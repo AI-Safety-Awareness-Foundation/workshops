@@ -47,8 +47,8 @@ Inside Out</p>
 <ul class="incremental">
 <li>Quick overview of mech interp and how we’re using it today</li>
 <li>Some conceptual exercises</li>
-<li>Some coding where we play around with real neural net models and try
-to understand how they do image recognition</li>
+<li>Some coding exercises where we play around with real neural net
+models and try to understand how they do image recognition</li>
 </ul></li>
 </ul>
 </div>
@@ -58,9 +58,8 @@ to understand how they do image recognition</li>
 <li>We are building increasingly powerful AI systems</li>
 <li>Current trajectory points toward AGI (Artificial General
 Intelligence) and potentially ASI (Artificial Superintelligence)</li>
-<li><strong>Critical problem</strong>: We don’t understand how to
-actually make these increasingly capable systems reliably do what we
-want</li>
+<li><strong>We don’t understand how to actually make these increasingly
+capable systems reliably do what we want</strong></li>
 <li>We deploy systems we cannot:
 <ul class="incremental">
 <li>Fully predict</li>
@@ -78,7 +77,7 @@ want</li>
 <li>There are a host of other social AI safety problems
 <ul class="incremental">
 <li>Who gets to decide what an AI should do?</li>
-<li>How should society</li>
+<li>How should society decide what to do with AI?</li>
 </ul></li>
 <li>Today we’re focused on the technical problem</li>
 </ul>
@@ -87,46 +86,33 @@ want</li>
 <h1>We Might Not Have a Lot of Time</h1>
 <ul class="incremental">
 <li>AI companies think there’s a chance we might get AGI very soon</li>
+<li><a
+href="https://www.youtube.com/watch?v=7LNyUbii0zw&amp;t=128s">Video of
+Anthropic CEO</a></li>
 </ul>
 </div>
 <div id="uncertainty-remains" class="slide section level1">
 <h1>Uncertainty Remains</h1>
 <ul class="incremental">
-<li></li>
+<li>How long until AGI?</li>
+<li>What does achieving AGI actually look like?</li>
+<li>How much will current architectural designs hold?</li>
 </ul>
 </div>
 <div id="mechanistic-interpretability-one-bet"
 class="slide section level1">
 <h1>Mechanistic Interpretability: One Bet</h1>
 <ul class="incremental">
-<li><strong>Goal</strong>: Reverse-engineer neural networks to
-understand their internal mechanisms</li>
-<li><strong>Promise</strong>: If we can understand how models work, we
-might:
+<li>Reverse-engineer neural networks to understand their internal
+mechanisms</li>
+<li>If we can understand how models work, we might:
 <ul class="incremental">
 <li>Detect deception</li>
 <li>Identify dangerous capabilities</li>
 <li>Verify alignment with designer objectives</li>
 </ul></li>
-<li><strong>Reality</strong>: Current progress is promising but severely
-limited</li>
+<li>Current progress is promising but severely limited</li>
 </ul>
-</div>
-<div id="why-study-mechanistic-interpretability-anyway"
-class="slide section level1">
-<h1>Why Study Mechanistic Interpretability Anyway?</h1>
-<ol class="incremental" style="list-style-type: decimal">
-<li><strong>Building foundations</strong>: Today’s toy models teach us
-techniques for tomorrow’s challenges</li>
-<li><strong>Developing intuitions</strong>: Understanding simple systems
-helps us reason about complex ones</li>
-<li><strong>Creating tools</strong>: Methods developed now may scale
-with future innovations</li>
-<li><strong>Inspiring solutions</strong>: Deep understanding often
-precedes breakthrough insights</li>
-<li><strong>It’s plain beautiful</strong>: Mechanistic interpretability
-can be fun!</li>
-</ol>
 </div>
 <div id="current-state-of-the-field" class="slide section level1">
 <h1>Current State of the Field</h1>
@@ -135,13 +121,14 @@ can be fun!</li>
 <li>Identify some circuits in small models</li>
 <li>Understand basic features in vision models</li>
 <li>Find some interpretable directions in language models</li>
+<li>This is <em>way</em> better than where we were four years ago!</li>
 </ul>
 <h2 id="what-we-cannot-do">What we <strong>cannot</strong> do:</h2>
 <ul class="incremental">
-<li>Fully interpret even small models</li>
-<li>Reliably detect deception</li>
-<li>Predict emergent capabilities</li>
-<li>Scale our techniques to frontier models</li>
+<li>Fully interpret even small LLMs</li>
+<li>Build robust and comprehensive detectors of things like deception
+(although there’s some promising sparks!)</li>
+<li>Robustly predict emergent capabilities</li>
 </ul>
 </div>
 <div id="disclaimer" class="slide section level1">
@@ -178,7 +165,7 @@ simpler than modern systems</li>
 <li>Even this simple model exhibits surprising complexity</li>
 <li>You’ll learn fundamental mechanistic interpretability
 techniques</li>
-<li>The general contour of the work applies to larger models nad more
+<li>The general contour of the work applies to larger models and more
 complex architectures</li>
 </ul>
 </div>
@@ -189,7 +176,7 @@ class="slide section level1">
 <li>Finding mathematically equivalent or near-equivalent restructurings
 of an architecture</li>
 <li>Being able to identify specific, concrete parts of a model that are
-responsible for</li>
+responsible for different capabilities</li>
 </ul>
 </div>
 <div id="what-youll-be-able-to-do-at-the-end-of-the-day"
@@ -209,7 +196,11 @@ class="slide section level1">
 <li>There are two (three if you count inputs as neurons) layers of
 neurons</li>
 <li>We pass iteratively from one layer to the next</li>
-<li>Therefore to understand why</li>
+<li>Therefore to understand the final outputs of a neural net, you need
+to understand not only each layer in isolation, but their compositions
+<ul class="incremental">
+<li>This is hard!</li>
+</ul></li>
 </ul>
 </div>
 <div id="diagram-of-standard-neural-net" class="slide section level1">
