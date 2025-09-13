@@ -2,6 +2,10 @@
 
 Understanding How a Vanilla Neural Net Does Image Detection from the Inside Out
 
+# QR Code with Important Links
+
+<img src="./doc-qr-code.jpg" width="350px">
+
 # Overall Structure Today
 
 + We'll assume:
