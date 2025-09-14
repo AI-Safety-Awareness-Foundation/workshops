@@ -8,20 +8,20 @@
 
 <details>
 <summary>Solution</summary>
-$\text{ReLU}(2.0 \cdot 0.5 + 1.5 \cdot -0.1) + 1.3 = 2.15$
+$\text{ReLU}(2.0 \cdot 0.5 + 1.5 \cdot -0.1 + 1.3) = 2.15$
 </details>
 
 *Exercise*:
 
 > Calculate what the output of this single neuron is if it was given the two
-> inputs 0.1 and 5 (corresponding respectively to the top input and the bottom
+> inputs 0.1 and 20 (corresponding respectively to the top input and the bottom
 > input).
 >
 > ![single neuron](./single_neuron_worked.jpeg)
 
 <details>
 <summary>Solution</summary>
-$\text{ReLU}(0.1 \cdot 0.5 + 5 \cdot -0.1) + 1.3 = 1.3$
+$\text{ReLU}(0.1 \cdot 0.5 + 5 \cdot -0.1 + 1.3) = \text{ReLU}(-0.65) = 0$
 </details>
 
 *Exercise*: 
