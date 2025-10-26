@@ -42,7 +42,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     e.preventDefault();
     if (evaluationInput.trim() && !isLoading) {
       onEvaluate(evaluationInput);
-      setEvaluationInput('');
+      // Keep the evaluation input for easy re-running or tweaking
     }
   };
 
