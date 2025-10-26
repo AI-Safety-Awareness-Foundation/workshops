@@ -39,22 +39,19 @@ to. The tools will be chosen for their significance in evaluation.
 The hard-coded list of tools will include:
 
 1. Access to read and write from a mock filesystem which we will pre-seed with a
-   variety of interesting files
+   variety of interesting files. For now the mock filesystem just will have a
+   collection of random text files.
 2. Access to mock email sending, where the model will have access to a
    tool with the following API:
     + Name: emailer
     + Arguments: sender-address, recipient-address, subject, body
 
-ASCII diagram of the interface:
+A mockup of the interface is available in PNG form in this repo at
+!["Image of user interface"](./mockup-of-interface.png), and can be edited via
+the Excalidraw file at `./sketch-of-interface.excalidraw`.
 
-```
-```
+## Application details
 
-## User flow
-
-The user provides at least one API key (possibly two if the user wishes for the
-classification model to be different from the model being evaluated).
-
-The user 
-
-## 
+This is a Typescript application that has no backend component because we will
+allow the user to submit API keys via the frontend and all the backend work is
+just LLM calls using those API keys.
