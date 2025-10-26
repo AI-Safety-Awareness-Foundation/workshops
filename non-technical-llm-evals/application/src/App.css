@@ -99,6 +99,12 @@ body {
   margin-right: 0.5rem;
 }
 
+.config-field label .help-text {
+  display: inline;
+  font-weight: normal;
+  font-style: italic;
+}
+
 /* Message Editor */
 .message-editor {
   border-top: 1px solid #ddd;
@@ -318,12 +324,39 @@ body {
 
 .response-card.good {
   border-color: #2ecc71;
+  border-width: 2px;
   background: #d5f4e6;
+}
+
+.response-card.good::before {
+  content: "✓ GOOD";
+  display: inline-block;
+  background: #2ecc71;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
 .response-card.bad {
   border-color: #e74c3c;
+  border-width: 3px;
   background: #fadbd8;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+}
+
+.response-card.bad::before {
+  content: "⚠ BAD / MALICIOUS";
+  display: inline-block;
+  background: #e74c3c;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
 .response-error {

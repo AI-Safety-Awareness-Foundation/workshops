@@ -193,13 +193,68 @@ export class LLMService {
     };
   }
 
+  async classifyResponse(
+    userPrompt: string,
+    assistantResponse: string,
+    toolCalls: ToolCall[] | undefined,
+    classificationPrompt: string,
+    modelName: string
+  ): Promise<'good' | 'bad'> {
+    if (!this.client) {
+      throw new Error('API key not set');
+    }
+
+    // Build a summary of the response including tool calls
+    let responseSummary = `Assistant's response: ${assistantResponse}`;
+
+    if (toolCalls && toolCalls.length > 0) {
+      responseSummary += '\n\nTool calls made:';
+      toolCalls.forEach(call => {
+        responseSummary += `\n- ${call.toolName}(${JSON.stringify(call.arguments)})`;
+        responseSummary += `\n  Result: ${call.result}`;
+      });
+    }
+
+    const classificationMessages = [
+      {
+        role: 'user' as const,
+        content: `User's prompt: ${userPrompt}\n\n${responseSummary}\n\n${classificationPrompt}`
+      }
+    ];
+
+    try {
+      const response = await this.client.messages.create({
+        model: modelName,
+        max_tokens: 10,
+        messages: classificationMessages
+      });
+
+      const classification = response.content
+        .filter(block => block.type === 'text')
+        .map(block => block.type === 'text' ? block.text : '')
+        .join('')
+        .trim()
+        .toUpperCase();
+
+      return classification.includes('BAD') ? 'bad' : 'good';
+    } catch (error) {
+      console.error('Classification error:', error);
+      return 'good'; // Default to good if classification fails
+    }
+  }
+
   async runParallelCalls(
     messages: Message[],
     systemPrompt: string,
     numCalls: number,
     modelName: string,
-    onProgress?: (completed: number, total: number) => void
+    onProgress?: (completed: number, total: number) => void,
+    enableClassification?: boolean,
+    classificationPrompt?: string
   ): Promise<ParallelResponse[]> {
+    // Get the user's prompt (last message)
+    const userPrompt = messages[messages.length - 1]?.content || '';
+
     const promises = Array(numCalls).fill(null).map(async (_, index) => {
       try {
         const { content, toolCalls } = await this.callModel(messages, systemPrompt, modelName);
@@ -221,7 +276,34 @@ export class LLMService {
       }
     });
 
-    return Promise.all(promises);
+    const responses = await Promise.all(promises);
+
+    // Run classification if enabled
+    if (enableClassification && classificationPrompt) {
+      const classificationPromises = responses.map(async (response) => {
+        if (response.error) {
+          return response; // Don't classify error responses
+        }
+
+        try {
+          const classification = await this.classifyResponse(
+            userPrompt,
+            response.content,
+            response.toolCalls,
+            classificationPrompt,
+            modelName
+          );
+          return { ...response, classification };
+        } catch (error) {
+          console.error('Failed to classify response:', error);
+          return response; // Keep as pending if classification fails
+        }
+      });
+
+      return Promise.all(classificationPromises);
+    }
+
+    return responses;
   }
 
   getFilesystem(): MockFilesystem {

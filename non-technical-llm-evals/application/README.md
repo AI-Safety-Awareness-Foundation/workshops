@@ -74,11 +74,15 @@ The first iteration of this application has been completed with the following fe
 - API key input (client-side only, session storage)
 - Model selection (Claude 3.5 Sonnet, Opus, Haiku)
 - Real-time progress tracking during parallel calls
+- **Automatic classification of responses as "good" or "bad"**:
+  - User-definable classification criteria
+  - Second LLM evaluates each response
+  - Visual highlighting of good/bad responses
+  - Helps identify propensity for malicious behavior
 
 ### 🚧 Planned for Future Iterations
-- Automatic classification of responses as "good" or "bad"
-- Response filtering and sorting
-- Export evaluation results
+- Response filtering and sorting by classification
+- Export evaluation results to CSV/JSON
 - Statistical summary of response patterns
 - Custom tool definitions
 

@@ -25,6 +25,7 @@ export interface EvalConfig {
   apiKey: string;
   modelName: string;
   enableClassification: boolean;
+  classificationPrompt: string;
 }
 
 export interface MockFile {

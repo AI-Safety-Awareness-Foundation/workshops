@@ -10,7 +10,7 @@ This is a manual LLM evaluation interface - a frontend-only TypeScript applicati
 
 1. **Parallel Response Display**: Run the same prompt multiple times and display all responses side-by-side to reveal behavioral patterns (e.g., "Would you hurt a hamster?" → 15 "no", 5 "yes")
 
-2. **Automatic Classification** (planned): A second model (or separate instance) acts as a classifier to categorize responses as "good" or "bad", automatically flagging concerning answers
+2. **Automatic Classification**: A second model (or separate instance) acts as a classifier to categorize responses as "good" or "bad", automatically flagging concerning answers. Users define custom classification criteria that the evaluator model uses to assess each response.
 
 3. **Conversation Control**:
    - User-editable system prompts
@@ -45,7 +45,7 @@ This is a manual LLM evaluation interface - a frontend-only TypeScript applicati
 - **Tool Use Loop**: Handles Anthropic's tool_use stop reason, executes tools, and continues conversation
 - **API Key**: Stored in component state (session-only, never persisted)
 - **Mock Tools**: Implemented as TypeScript classes, executed synchronously when model calls them
-- **Response Classification**: Stub implementation (classification field exists but not yet auto-populated)
+- **Response Classification**: `LLMService.classifyResponse()` makes a separate LLM call per response with user-defined criteria, returning 'good' or 'bad'. Classifications run in parallel after all responses are collected. The classifier receives the user prompt, assistant response, and all tool calls.
 
 ## Development Commands
 
