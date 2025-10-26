@@ -1,8 +1,7 @@
 import { useState, useRef } from 'react';
 import { ConfigPanel } from './components/ConfigPanel';
-import { MessageEditor } from './components/MessageEditor';
+import { ConversationView } from './components/ConversationView';
 import { ResponseGrid } from './components/ResponseGrid';
-import { ChatInput } from './components/ChatInput';
 import { LLMService } from './services/llmService';
 import { EvalConfig, Message, ParallelResponse } from './types';
 import './App.css';
@@ -79,12 +78,18 @@ function App() {
       <div className="app-layout">
         <aside className="sidebar">
           <ConfigPanel config={config} onConfigChange={setConfig} />
-          <MessageEditor messages={prefixMessages} onMessagesChange={setPrefixMessages} />
         </aside>
 
         <main className="main-content">
-          <div className="evaluation-area">
-            <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+          <div className="conversation-section">
+            <ConversationView
+              messages={prefixMessages}
+              onMessagesChange={setPrefixMessages}
+              onEvaluate={handleSendMessage}
+              isLoading={isLoading}
+            />
+          </div>
+          <div className="results-section">
             <ResponseGrid responses={responses} isLoading={isLoading} progress={progress} />
           </div>
         </main>
