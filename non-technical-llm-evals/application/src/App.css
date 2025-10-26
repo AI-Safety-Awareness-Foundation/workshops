@@ -1,0 +1,388 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+}
+
+.app-header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.app-header h1 {
+  margin-bottom: 0.5rem;
+}
+
+.app-header p {
+  color: #bdc3c7;
+  font-size: 0.9rem;
+}
+
+.app-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 350px;
+  background: white;
+  border-right: 1px solid #ddd;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Config Panel */
+.config-panel {
+  margin-bottom: 2rem;
+}
+
+.config-panel h3 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.config-field {
+  margin-bottom: 1rem;
+}
+
+.config-field label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.config-field input[type="text"],
+.config-field input[type="password"],
+.config-field input[type="number"],
+.config-field select,
+.config-field textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.config-field textarea {
+  resize: vertical;
+  font-family: monospace;
+}
+
+.config-field input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+/* Message Editor */
+.message-editor {
+  border-top: 1px solid #ddd;
+  padding-top: 1.5rem;
+}
+
+.message-editor h3 {
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.help-text {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.messages-list {
+  margin-bottom: 1rem;
+}
+
+.message {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: #fafafa;
+}
+
+.message-user {
+  border-left: 3px solid #3498db;
+}
+
+.message-assistant {
+  border-left: 3px solid #2ecc71;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.message-header strong {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.delete-btn:hover {
+  background: #c0392b;
+}
+
+.message-content {
+  cursor: pointer;
+  min-height: 2rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 3px;
+}
+
+.message-content em {
+  color: #999;
+}
+
+.message textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #3498db;
+  border-radius: 3px;
+  font-family: inherit;
+}
+
+.add-message-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-message-buttons button {
+  flex: 1;
+  padding: 0.5rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.add-message-buttons button:hover {
+  background: #2980b9;
+}
+
+/* Evaluation Area */
+.evaluation-area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+
+/* Chat Input */
+.chat-input {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.chat-input textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  resize: vertical;
+}
+
+.chat-input button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.chat-input button:hover:not(:disabled) {
+  background: #229954;
+}
+
+.chat-input button:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Response Grid */
+.response-grid-container {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.response-grid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #ecf0f1;
+}
+
+.response-grid-header h3 {
+  color: #2c3e50;
+}
+
+.progress-indicator {
+  font-size: 0.9rem;
+  color: #3498db;
+  font-weight: 500;
+}
+
+.response-grid-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #7f8c8d;
+}
+
+.response-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.response-card {
+  border: 2px solid #ecf0f1;
+  border-radius: 6px;
+  padding: 1rem;
+  background: #fafafa;
+  transition: transform 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.response-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.response-card.error {
+  border-color: #e74c3c;
+  background: #fadbd8;
+}
+
+.response-card.good {
+  border-color: #2ecc71;
+  background: #d5f4e6;
+}
+
+.response-card.bad {
+  border-color: #e74c3c;
+  background: #fadbd8;
+}
+
+.response-error {
+  color: #c0392b;
+  font-size: 0.9rem;
+}
+
+.response-content {
+  flex: 1;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.tool-calls {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+  font-size: 0.85rem;
+}
+
+.tool-calls strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.tool-call {
+  background: white;
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tool-name {
+  font-weight: bold;
+  color: #2980b9;
+  margin-bottom: 0.25rem;
+}
+
+.tool-args {
+  margin: 0.25rem 0;
+}
+
+.tool-args code {
+  background: #ecf0f1;
+  padding: 0.125rem 0.25rem;
+  border-radius: 2px;
+  font-size: 0.8rem;
+}
+
+.tool-result {
+  margin-top: 0.25rem;
+  color: #555;
+}
+
+.tool-result code {
+  background: #d5f4e6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 2px;
+  font-size: 0.8rem;
+}

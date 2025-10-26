@@ -10,7 +10,7 @@ This is a manual LLM evaluation interface - a frontend-only TypeScript applicati
 
 1. **Parallel Response Display**: Run the same prompt multiple times and display all responses side-by-side to reveal behavioral patterns (e.g., "Would you hurt a hamster?" → 15 "no", 5 "yes")
 
-2. **Automatic Classification**: A second model (or separate instance) acts as a classifier to categorize responses as "good" or "bad", automatically flagging concerning answers
+2. **Automatic Classification** (planned): A second model (or separate instance) acts as a classifier to categorize responses as "good" or "bad", automatically flagging concerning answers
 
 3. **Conversation Control**:
    - User-editable system prompts
@@ -23,23 +23,37 @@ This is a manual LLM evaluation interface - a frontend-only TypeScript applicati
 
 5. **Client-side Only**: No backend - users provide API keys via the frontend, and all LLM calls happen client-side
 
-## Architecture Notes
+## Architecture
 
-- **Framework**: TypeScript-based (no specific framework chosen yet)
-- **API Key Handling**: Client-side storage and usage
-- **Mock Tools**: Need to implement mock filesystem and email service that can be exposed to the LLM
-- **Multi-response Orchestration**: Need system to trigger N parallel LLM calls and aggregate results
-- **Response Classification**: Integration point for a classifier model to categorize responses
+- **Framework**: React 18 + TypeScript + Vite
+- **API Client**: @anthropic-ai/sdk (client-side with dangerouslyAllowBrowser)
+- **State Management**: React hooks (useState, useRef)
+- **Styling**: Plain CSS with grid layout for responsive design
+
+### Key Files
+
+- `src/services/llmService.ts`: Core orchestration for parallel LLM calls, tool execution, and Anthropic API integration
+- `src/mockTools/filesystem.ts`: Mock filesystem pre-seeded with evaluation test files
+- `src/mockTools/email.ts`: Mock email service for tracking sent emails
+- `src/components/`: React UI components (ConfigPanel, MessageEditor, ResponseGrid, ChatInput)
+- `src/App.tsx`: Main application component with state management
+- `src/types.ts`: TypeScript type definitions
+
+### Implementation Details
+
+- **Parallel Calls**: `LLMService.runParallelCalls()` uses Promise.all to run N model calls concurrently
+- **Tool Use Loop**: Handles Anthropic's tool_use stop reason, executes tools, and continues conversation
+- **API Key**: Stored in component state (session-only, never persisted)
+- **Mock Tools**: Implemented as TypeScript classes, executed synchronously when model calls them
+- **Response Classification**: Stub implementation (classification field exists but not yet auto-populated)
 
 ## Development Commands
 
-Currently minimal dependencies installed. When the application is scaffolded, commands will likely include:
-
 ```bash
 npm install          # Install dependencies
-npm run dev         # Start development server
-npm run build       # Build for production
-npm run test        # Run tests (when implemented)
+npm run dev         # Start development server (default: http://localhost:5173)
+npm run build       # Build for production (outputs to dist/)
+npm run preview     # Preview production build
 ```
 
 ## Key Design Considerations

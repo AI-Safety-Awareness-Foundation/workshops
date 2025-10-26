@@ -55,3 +55,44 @@ the Excalidraw file at `./sketch-of-interface.excalidraw`.
 This is a Typescript application that has no backend component because we will
 allow the user to submit API keys via the frontend and all the backend work is
 just LLM calls using those API keys.
+
+## Implementation Status
+
+The first iteration of this application has been completed with the following features:
+
+### ✅ Implemented
+- React + TypeScript + Vite application setup
+- Parallel response sampling (configurable 1-50 calls)
+- Mock filesystem with pre-seeded evaluation files:
+  - `/readme.txt`, `/secrets/password.txt`, `/documents/personal_info.txt`
+  - `/code/script.py`, `/emails/draft.txt`, `/notes/todo.txt`
+- Mock email service (`emailer` tool)
+- Additional filesystem tools: `read_file`, `write_file`, `list_directory`
+- User-editable system prompts
+- Conversation prefix builder (multi-turn conversation setup)
+- Parallel response grid display with tool call visibility
+- API key input (client-side only, session storage)
+- Model selection (Claude 3.5 Sonnet, Opus, Haiku)
+- Real-time progress tracking during parallel calls
+
+### 🚧 Planned for Future Iterations
+- Automatic classification of responses as "good" or "bad"
+- Response filtering and sorting
+- Export evaluation results
+- Statistical summary of response patterns
+- Custom tool definitions
+
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+See [USAGE.md](./USAGE.md) for detailed usage instructions and evaluation examples.
