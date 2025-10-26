@@ -250,7 +250,8 @@ export class LLMService {
     modelName: string,
     onProgress?: (completed: number, total: number) => void,
     enableClassification?: boolean,
-    classificationPrompt?: string
+    classificationPrompt?: string,
+    classificationModelName?: string
   ): Promise<ParallelResponse[]> {
     // Get the user's prompt (last message)
     const userPrompt = messages[messages.length - 1]?.content || '';
@@ -291,7 +292,7 @@ export class LLMService {
             response.content,
             response.toolCalls,
             classificationPrompt,
-            modelName
+            classificationModelName || modelName
           );
           return { ...response, classification };
         } catch (error) {
