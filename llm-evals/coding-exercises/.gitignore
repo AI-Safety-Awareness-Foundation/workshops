@@ -1,0 +1,8 @@
+__pycache__
+node_modules
+
+
+# Ignore these for now since they're just local dev tool things
+# May want to check in later
+package-lock.json
+package.json
