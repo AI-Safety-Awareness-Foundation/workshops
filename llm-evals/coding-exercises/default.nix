@@ -50,6 +50,10 @@ in pkgs.mkShell rec {
   postShellHook = ''
     # allow pip to install wheels
     unset SOURCE_DATE_EPOCH
+
+    # Prepend venv site-packages to PYTHONPATH to prioritize venv packages over Nix packages
+    # This ensures packages installed via pip (like typing_extensions 4.14.1) take precedence
+    export PYTHONPATH="${venvDir}/lib/python3.13/site-packages:$PYTHONPATH"
   '';
 }
 
