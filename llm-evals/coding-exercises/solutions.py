@@ -16,8 +16,31 @@ completion = client.chat.completions.create(
       "role": "user",
       "content": "What is the meaning of life?"
     }
-  ]
+  ],
+  logprobs=True,
+  top_logprobs=5
 )
+
+# %%
+import math
+import copy
+
+def get_token_probabilities(completion):
+  probabilities = []
+  for choice in completion.model_dump()['choices']:
+    new_logprobs = copy.deepcopy(choice['logprobs']['content'])
+    for logprob_item in new_logprobs:
+      for candidate_logprob_item in logprob_item['top_logprobs']:
+        candidate_logprob_item['prob'] = math.exp(candidate_logprob_item['logprob'])
+      logprob_item['prob'] = math.exp(logprob_item['logprob'])
+    probabilities.append(new_logprobs)
+  return probabilities
+
+get_token_probabilities(completion)
+
+# %%
+
+print(f"{completion.model_dump()=}")
 
 print(completion.choices[0].message.content)
 
