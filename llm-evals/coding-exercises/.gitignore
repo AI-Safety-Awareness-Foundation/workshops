@@ -1,5 +1,6 @@
 __pycache__
 node_modules
+.env
 
 
 # Ignore these for now since they're just local dev tool things
