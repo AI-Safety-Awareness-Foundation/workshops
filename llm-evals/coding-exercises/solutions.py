@@ -22,12 +22,28 @@ encounter in cutting-edge AI.
 
 from openai import OpenAI
 from dotenv import load_dotenv
+from dataclasses import dataclass
 import os
 
 load_dotenv()
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_KEY")
 VLLM_ENDPOINT = os.getenv("VLLM_ENDPOINT")
+
+# Verify that the environment variables pass some basic sanity checks
+if not OPENROUTER_KEY.startswith("sk-"):
+   raise Exception(
+      """Your OPENROUTER_KEY environment variable (likely loaded from your .env
+      file) does not seem to be a valid OpenRouter API key. Double check you've
+      defined OPENROUTER_KEY in your .env file."""
+    )
+
+if not ("http" in VLLM_ENDPOINT):
+   raise Exception(
+      """Your VLLM_ENDPOINT environment variable (likely loaded from your .env
+      file) does not seem to be a valid web URL. Make sure you've correctly
+      defined VLLM_ENDPOINT in your .env file."""
+    )
 
 # %% [markdown]
 """
@@ -123,8 +139,8 @@ default_answer_to_simple_arithmetic.choices[0].message.reasoning
 # %% [markdown]
 """
 Different models have different quirks. OpenAI's models often times have certain
-limitations around reasoning tokens. Some models might not reveal their
-reasoning at all and only offer summaries of the reasoning.
+limitations around displaying their reasoning tokens. Some of their models might
+not reveal their reasoning at all and only offer summaries of the reasoning.
 
 Models usually offer some sort of options around reasoning, that let you signal
 to the model how much reasoning to do, or potentially to do no reasoning at all.
@@ -178,8 +194,300 @@ print(f"Content: {minimal_reasoning_answer_to_simple_arithmetic_qwen.choices[0].
 """
 Remember again, that fundamentally models are big token sequence to token
 sequence machines. So a reasoning token isn't fundamentally something that's
-different from 
+different from a normal output token. It's just marked up differently in the raw
+model output and then parsed by the model provider's backend API servers to
+rearrange them into nice JSON objects with a separate `reasoning` field.
+
+Indeed the market often will hype up "agents" and talk about how agents are the
+hot new thing and that they represent a quantum leap over "old-school" LLMs. In
+fact agents are just LLMs! It just turns out that when your LLMs get smart
+enough, they can emit text that serves as coherent instructions to other tools
+and then can also coherently analyze the output of those tools when their
+outputs are piped back to the LLM.
+
+This bears repeating. **All of the agentic advances of LLMs from 2024 onward can
+be directly traced back to improvements in LLM model capability improvement**.
+To the extent that agents are getting better and more useful, that is a direct
+reflection that the model underlying all of it is getting better.
+
+To illustrate why agents aren't so much of a revolutionary change in AI, so much
+as just some scaffolding around an impressive model that is now capable enough
+of coherently interacting in an external world, we'll build a simple agent right
+now on top of a supposedly "non-agentic" LLM (we'll use our Qwen model for
+this)!
+
+We'll "hook up" our basic model to an external arithmetic calculator where "hooking up" just means 
+we'll tell our model to output XML-esque tags of the form "<functioncall>add(1,
+2)</functioncall>" whenever e.g. it wants to add 1 and 2 together and then pipe
+back the output to the model as part of the continuing conversation.
 """
+
+# %%
+
+# First we'll need a function that can extract content from between
+# <functioncall>...</functioncall> tags.
+
+import re
+import ast
+
+@dataclass
+class FunctionCall:
+  function_name: str
+  function_args: list[object]
+  # Important for being able to tell the LLM which answers corresponded to which
+  # tool calls
+  call_id: str
+
+
+# This function is a bit annoying to implement on your own and has only some
+# tangential value in understanding agents. If you're in a bit of a rush, I
+# would highly recommend just copying the implementations from solutions.py.
+def extract_function_calls(text: str) -> list[FunctionCall]:
+    """
+    Extract function calls from <functioncall>...</functioncall> tags.
+    
+    Args:
+        text: String containing potential function call tags
+        
+    Returns:
+        List of dictionaries with 'function_name' and 'args' keys
+    """
+    # raise NotImplementedError()
+    #BEGIN SOLUTION
+    results = []
+    
+    # Find all content between <functioncall id="..."> and </functioncall> tags
+    # Captures the id attribute and the content between tags
+    tag_pattern = r'<functioncall\s+id="([^"]*)">(.*?)</functioncall>'
+    matches = re.findall(tag_pattern, text, re.DOTALL)
+    
+    for call_id, match in matches:
+        match = match.strip()
+        
+        # Parse function name and arguments: function_name(args)
+        func_pattern = r'^(\w+)\((.*)\)$'
+        func_match = re.match(func_pattern, match, re.DOTALL)
+        
+        if func_match:
+            function_name = func_match.group(1)
+            args_str = func_match.group(2).strip()
+            
+            # Parse arguments using ast.literal_eval for safe evaluation
+            if args_str:
+                try:
+                    # Wrap in tuple syntax to handle single and multiple args
+                    args = list(ast.literal_eval(f'({args_str},)'))
+                except (ValueError, SyntaxError):
+                    # If parsing fails, store as raw string
+                    args = [args_str]
+            else:
+                args = []
+            
+            results.append(FunctionCall(
+                function_name=function_name,
+                function_args=args,
+                call_id=call_id,
+            ))
+    
+    return results
+    #END SOLUTION
+
+
+# Test that this function works
+extraction_results = extract_function_calls(
+  """I'd like to add some numbers together.<functioncall id="id0">add(12,
+  1)</functioncall> and <functioncall id="id1">add(23, 2)</functioncall>"""
+)
+
+expected_results = [FunctionCall(function_name='add', function_args=[12, 1], call_id="id0"), FunctionCall(function_name='add', function_args=[23, 2], call_id="id1")]
+
+assert extraction_results == expected_results
+
+# %%
+
+# Now let's actually implement the agent!
+# When we ask the LLM to do arithmetic without letting output a chain of
+# thought, it can handle small numbers, but not large numbers
+
+# Let's try first with small numbers
+first_num_to_use = 12312
+second_num_to_use = 23483
+
+minimal_reasoning_answer_to_simple_arithmetic_qwen = vllm_client.chat.completions.create(
+  model=qwen_model,
+  messages=[
+    {
+      "role": "user",
+      "content": f"What is {first_num_to_use} + {second_num_to_use}? Don't think, just give a one word answer."
+    },
+  ]
+)
+response_to_arithmetic_question = minimal_reasoning_answer_to_simple_arithmetic_qwen.choices[0].message.content
+print(f"Full LLM response:\n{response_to_arithmetic_question}")
+llm_no_tool_answer = response_to_arithmetic_question.splitlines()[-1]
+
+actual_answer = first_num_to_use + second_num_to_use
+
+# The LLM answers just fine!
+print(f"{llm_no_tool_answer=} vs {actual_answer=}")
+
+# %%
+
+# Now let's try with large numbers
+
+first_num_to_use = 2198429323842219
+second_num_to_use = 839975292349399
+
+minimal_reasoning_answer_to_simple_arithmetic_qwen = vllm_client.chat.completions.create(
+  model=qwen_model,
+  messages=[
+    {
+      "role": "user",
+      "content": f"What is {first_num_to_use} + {second_num_to_use}? Don't think, just give a one word answer."
+    },
+  ]
+)
+response_to_arithmetic_question = minimal_reasoning_answer_to_simple_arithmetic_qwen.choices[0].message.content
+print(f"Full LLM response:\n{response_to_arithmetic_question}")
+llm_no_tool_answer = response_to_arithmetic_question.splitlines()[-1]
+
+actual_answer = first_num_to_use + second_num_to_use
+
+# We notice that the LLM gets addition of large numbers wrong
+print(f"{llm_no_tool_answer=} vs {actual_answer=}")
+
+# %%
+# Let's help it out by giving it access to a calculator. Now it's a
+# fancy-schmancy agent!
+
+# Qwen has been trained to output thinking tokens between <think>...</think>
+# tags. That can be inconvenient for us to figure out which functioncalls the
+# LLM actually "meant" to send, so we have a handy function here to strip them
+# out.
+def remove_thinking(text: str) -> str:
+    """
+    Remove all content between <think>...</think> tags (including the tags).
+    
+    Args:
+        text: String potentially containing think tags
+        
+    Returns:
+        String with all think blocks removed
+    """
+    return re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+
+message_to_send_llm = f"""You have access to a calculator that implements the
+basic arithmetic operations of addition, subtraction, multiplication, and
+division. Any time you wish to use the calculator, simply output <functioncall
+id=$CALL_ID>$FUNCTION_NAME($FUNCTION_ARG, $FUNCTION_ARG)</functioncall> in your
+output and you will get back a response of the form <functionresponse
+id=$CALL_ID>$ANSWER</functionresponse>. You should generate a random $CALL_ID
+when creating your functioncall tags because this will let you associate which
+functionresponse is meant to be responding to which functioncall if you have
+multiple functioncalls.
+
+You will have access to four basic functions, namely "add", "subtract",
+"multiply", and "division". Each of those should be used in place of
+$FUNCTION_NAME if you wish to call that particular function.
+
+For example if you wish to add 2893 and 125 together, emit <functioncall
+id="some_random_call_id">add(2893, 125)</functioncall> and then you will receive
+a response of <functionresponse id="some_random_call_id">3018</functionresponse>.
+
+Don't perform any arithmetic operations yourself if you could just use a
+functioncall instead to do the same thing.
+
+With that in mind, can you tell me what {first_num_to_use} + {second_num_to_use}
+is?
+"""
+
+initial_message_for_arithmetic = {
+  "role": "user",
+  "content": message_to_send_llm
+}
+
+response_to_large_num_arithmetic_question = vllm_client.chat.completions.create(
+  model=qwen_model,
+  messages=[initial_message_for_arithmetic]
+)
+
+response_with_tool_call = response_to_large_num_arithmetic_question.choices[0].message.content
+
+# %%
+
+response_with_think_tags_stripped = remove_thinking(response_with_tool_call)
+
+function_calls = extract_function_calls(response_with_think_tags_stripped)
+
+response_text = ""
+for function_call in function_calls:
+  result = None
+  if function_call.function_name == "add":
+    result = function_call.function_args[0] + function_call.function_args[1]
+  elif function_call.function_name == "subtract":
+    result = function_call.function_args[0] - function_call.function_args[1]
+  elif function_call.function_name == "multiply":
+    result = function_call.function_args[0] * function_call.function_args[1]
+  elif function_call.function_name == "divide":
+    result = function_call.function_args[0] / function_call.function_args[1]
+  response_text = response_text + f"<functionresponse id={function_call.call_id}>{result}</functionresponse>"
+
+# Remember to include the LLM response!
+llm_response = {
+   "role": "assistant",
+   "content": response_with_tool_call,
+}
+
+response_message = {
+   "role": "user",
+   "content": response_text
+}
+
+messages_to_send_back = [initial_message_for_arithmetic, llm_response, response_message]
+
+final_result_message = vllm_client.chat.completions.create(
+  model=qwen_model,
+  messages=messages_to_send_back,
+)
+
+# And now we can see that the LLM incorporates a calculator tool.
+# Congratulations you've just run a tool call from scratch! 
+final_result_message.choices[0].message.content
+
+# %% [markdown]
+"""
+As we've seen, tools used by agentic LLMs are very simple to implement from
+scratch. This is not to pooh-pooh tool calls. To the contrary is is *astounding*
+that all you need to do to make a sufficiently capable AI model capable of using
+a tool is just... telling the model in natural language how to use the tool!
+
+This underscores what we meant early that agents are not some sort of
+qualitatively different kind of AI model, they are the **simple byproduct of any
+sufficiently intelligent AI model**. And indeed this is where a lot of the
+dangers of AI models lie! 
+
+Indeed we've just demonstrated that a pretty weak Qwen model is perfectly
+capable of being "agentic", by which we mean it can act using external tools to
+fulfill some sort of goal. The goal is very simple, just basic arithmetic, but
+the overall principle remains the same in more complex situations.
+
+The theoretical foundations of technical AI safety research recognizes this and
+views agents and agentic behavior as inevitable results of any sufficiently
+smart system. Much of the problem with AI is that we don't know how to make sure
+agents are actually aligned with what we want them to do as problems get
+increasingly complex!
+
+We'll come back to that in the evaluations section of our workshop. For now,
+let's continue on to implement a full agent that uses the calculator when it
+feels it is necessary to do so.
+"""
+
+# %%
+
+# Now let's go ahead and actually implement a full agent in a loop. Basically
+# the same thing as we did with our minimal ChatGPT clone, but now we just give
+# the model access to a calculator in much the same way that we did manually
+# above.
 
 
 # %% [markdown]
@@ -384,6 +692,69 @@ multiple iterations of calling tools.
 We'll begin by making a very simple clone of ChatGPT.
 """
 
+# %%
+
+# This one is a bit tricky to write robust unit tests for, so after you've
+# completed this exercise, it probably makes sense to just look at the solutions
+# and see if your solution matches up.
+class PersistentConversation:
+  def __init__(self, llm_client: OpenAI, model_name: str, system_prompt: str | None = None):
+    self.llm_client = llm_client
+    self.model_name = model_name
+    self.system_prompt = system_prompt
+    self.message_history = []
+  
+  def add_user_message(self, msg: str) -> str:
+    """
+    This takes a new user message, appends it to the message history, asks the
+    LLM for a response, appends that response as well to message history, and
+    then finally return the contents of that response.
+    """
+    # raise NotImplementedError()
+    #BEGIN SOLUTION
+    if self.system_prompt is not None:
+      system_prompt_message = {
+         "role": "system",
+         "content": self.system_prompt
+      }
+      self.message_history.append(system_prompt_message)
+    new_msg = {
+       "role": "user",
+       "content": msg,
+    }
+    self.message_history.append(new_msg)
+    llm_response = self.llm_client.chat.completions.create(
+      model=self.model_name,
+      messages = self.message_history,
+    ).choices[0].message
+    self.message_history.append(llm_response)
+    return llm_response.content
+    #END SOLUTION
+
+# %%
+
+convo = PersistentConversation(openrouter_client, gpt_5_nano)
+
+# %%
+
+# Now you can play with this convo just like you would with ChatGPT
+# You can start with `convo.add_user_message("Hello!")`
+#
+# If you want you could just stick a while True loop, pipe in stdin, and just have an indefinite conversation!
+
+# Change this *in-place* to keep talking with the LLM
+# Redefine convo to wipe the message history
+convo.add_user_message("Hello!")
+
+# Uncomment this if you want to have an on-going conversation
+# It's kind of weird to do this in the Jupyter kernel because the print comes
+# only after a stdin response has been recorded, but it would work as a
+# standalone script
+# while True:
+#   user_input = input("What would you like to say?")
+#   llm_response = convo.add_user_message(user_input)
+#   print(llm_response)
+
 
 # %%
 
@@ -395,7 +766,6 @@ As models get smarter, doing
 
 # %%
 
-from dataclasses import dataclass
 import json
 
 @dataclass
