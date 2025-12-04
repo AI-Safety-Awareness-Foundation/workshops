@@ -189,6 +189,63 @@ minimal_reasoning_answer_to_simple_arithmetic_qwen = vllm_client.chat.completion
   ]
 )
 print(f"Content: {minimal_reasoning_answer_to_simple_arithmetic_qwen.choices[0].message.content}")
+# %% [markdown]
+
+"""
+To understand some of the nuances of how to interact with LLMs, let's begin by
+implementing a simple ChatGPT-like clone from scratch.
+
+The usual LLM APIs are all stateless, so you will need to take care of making
+sure to keep a running log of what messages the user has sent, what the LLM has
+responded with, and send *all of that* to the LLM API each time you want a new
+response.
+"""
+
+# %%
+
+# This one is a bit tricky to write robust unit tests for, so after you've
+# completed this exercise, it probably makes sense to just look at the solutions
+# and see if your solution matches up.
+class PersistentConversation:
+  def __init__(self, llm_client: OpenAI, model_name: str, system_prompt: str | None = None):
+    self.llm_client = llm_client
+    self.model_name = model_name
+    self.system_prompt = system_prompt
+    self.message_history = []
+  
+  def add_user_message(self, msg: str) -> str:
+    """
+    This takes a new user message, appends it to the message history, asks the
+    LLM for a response, appends that response as well to message history, and
+    then finally return the contents of that response.
+    """
+    raise NotImplementedError()
+
+# %%
+
+convo = PersistentConversation(openrouter_client, gpt_5_nano)
+
+# %%
+
+# Now you can play with this convo just like you would with ChatGPT
+# You can start with `convo.add_user_message("Hello!")`
+#
+# If you want you could just stick a while True loop, pipe in stdin, and just have an indefinite conversation!
+
+# Change this *in-place* to keep talking with the LLM
+# Redefine convo to wipe the message history
+convo.add_user_message("Hello!")
+
+# Uncomment this if you want to have an on-going conversation
+# It's kind of weird to do this in the Jupyter kernel because the print comes
+# only after a stdin response has been recorded, but it would work as a
+# standalone script
+# while True:
+#   user_input = input("What would you like to say?")
+#   llm_response = convo.add_user_message(user_input)
+#   print(llm_response)
+
+
 
 # %% [markdown]
 """
@@ -234,12 +291,15 @@ import ast
 class FunctionCall:
   function_name: str
   function_args: list[object]
+  # Important for being able to tell the LLM which answers corresponded to which
+  # tool calls
+  call_id: str
 
 
 # This function is a bit annoying to implement on your own and has only some
 # tangential value in understanding agents. If you're in a bit of a rush, I
 # would highly recommend just copying the implementations from solutions.py.
-def extract_function_calls(text: str) -> list[dict[str, str]]:
+def extract_function_calls(text: str) -> list[FunctionCall]:
     """
     Extract function calls from <functioncall>...</functioncall> tags.
     
@@ -254,16 +314,212 @@ def extract_function_calls(text: str) -> list[dict[str, str]]:
 
 # Test that this function works
 extraction_results = extract_function_calls(
-  """I'd like to add some numbers together.<functioncall>add(12,
-  1)</functioncall> and <functioncall>add(23, 2)</functioncall>"""
+  """I'd like to add some numbers together.<functioncall id="id0">add(12,
+  1)</functioncall> and <functioncall id="id1">add(23, 2)</functioncall>"""
 )
 
-expected_results = [FunctionCall(function_name='add', function_args=[12, 1]), FunctionCall(function_name='add', function_args=[23, 2])]
+expected_results = [FunctionCall(function_name='add', function_args=[12, 1], call_id="id0"), FunctionCall(function_name='add', function_args=[23, 2], call_id="id1")]
 
 assert extraction_results == expected_results
 
+# %%
+
+# Now let's actually implement the agent!
+# When we ask the LLM to do arithmetic without letting output a chain of
+# thought, it can handle small numbers, but not large numbers
+
+# Let's try first with small numbers
+first_num_to_use = 12312
+second_num_to_use = 23483
+
+minimal_reasoning_answer_to_simple_arithmetic_qwen = vllm_client.chat.completions.create(
+  model=qwen_model,
+  messages=[
+    {
+      "role": "user",
+      "content": f"What is {first_num_to_use} + {second_num_to_use}? Don't think, just give a one word answer."
+    },
+  ]
+)
+response_to_arithmetic_question = minimal_reasoning_answer_to_simple_arithmetic_qwen.choices[0].message.content
+print(f"Full LLM response:\n{response_to_arithmetic_question}")
+llm_no_tool_answer = response_to_arithmetic_question.splitlines()[-1]
+
+actual_answer = first_num_to_use + second_num_to_use
+
+# The LLM answers just fine!
+print(f"{llm_no_tool_answer=} vs {actual_answer=}")
+
+# %%
+
+# Now let's try with large numbers
+
+first_num_to_use = 2198429323842219
+second_num_to_use = 839975292349399
+
+minimal_reasoning_answer_to_simple_arithmetic_qwen = vllm_client.chat.completions.create(
+  model=qwen_model,
+  messages=[
+    {
+      "role": "user",
+      "content": f"What is {first_num_to_use} + {second_num_to_use}? Don't think, just give a one word answer."
+    },
+  ]
+)
+response_to_arithmetic_question = minimal_reasoning_answer_to_simple_arithmetic_qwen.choices[0].message.content
+print(f"Full LLM response:\n{response_to_arithmetic_question}")
+llm_no_tool_answer = response_to_arithmetic_question.splitlines()[-1]
+
+actual_answer = first_num_to_use + second_num_to_use
+
+# We notice that the LLM gets addition of large numbers wrong
+print(f"{llm_no_tool_answer=} vs {actual_answer=}")
+
+# %%
+# Let's help it out by giving it access to a calculator. Now it's a
+# fancy-schmancy agent!
+
+# Qwen has been trained to output thinking tokens between <think>...</think>
+# tags. That can be inconvenient for us to figure out which functioncalls the
+# LLM actually "meant" to send, so we have a handy function here to strip them
+# out.
+def remove_thinking(text: str) -> str:
+    """
+    Remove all content between <think>...</think> tags (including the tags).
+    
+    Args:
+        text: String potentially containing think tags
+        
+    Returns:
+        String with all think blocks removed
+    """
+    return re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+
+message_to_send_llm = f"""You have access to a calculator that implements the
+basic arithmetic operations of addition, subtraction, multiplication, and
+division. Any time you wish to use the calculator, simply output <functioncall
+id=$CALL_ID>$FUNCTION_NAME($FUNCTION_ARG, $FUNCTION_ARG)</functioncall> in your
+output and you will get back a response of the form <functionresponse
+id=$CALL_ID>$ANSWER</functionresponse>. You should generate a random $CALL_ID
+when creating your functioncall tags because this will let you associate which
+functionresponse is meant to be responding to which functioncall if you have
+multiple functioncalls.
+
+You will have access to four basic functions, namely "add", "subtract",
+"multiply", and "division". Each of those should be used in place of
+$FUNCTION_NAME if you wish to call that particular function.
+
+For example if you wish to add 2893 and 125 together, emit <functioncall
+id="some_random_call_id">add(2893, 125)</functioncall> and then you will receive
+a response of <functionresponse id="some_random_call_id">3018</functionresponse>.
+
+Don't perform any arithmetic operations yourself if you could just use a
+functioncall instead to do the same thing.
+
+With that in mind, can you tell me what {first_num_to_use} + {second_num_to_use}
+is?
+"""
+
+initial_message_for_arithmetic = {
+  "role": "user",
+  "content": message_to_send_llm
+}
+
+response_to_large_num_arithmetic_question = vllm_client.chat.completions.create(
+  model=qwen_model,
+  messages=[initial_message_for_arithmetic]
+)
+
+response_with_tool_call = response_to_large_num_arithmetic_question.choices[0].message.content
+
+# %%
+
+response_with_think_tags_stripped = remove_thinking(response_with_tool_call)
+
+function_calls = extract_function_calls(response_with_think_tags_stripped)
+
+response_text = ""
+for function_call in function_calls:
+  result = None
+  if function_call.function_name == "add":
+    result = function_call.function_args[0] + function_call.function_args[1]
+  elif function_call.function_name == "subtract":
+    result = function_call.function_args[0] - function_call.function_args[1]
+  elif function_call.function_name == "multiply":
+    result = function_call.function_args[0] * function_call.function_args[1]
+  elif function_call.function_name == "divide":
+    result = function_call.function_args[0] / function_call.function_args[1]
+  response_text = response_text + f"<functionresponse id={function_call.call_id}>{result}</functionresponse>"
+
+# Remember to include the LLM response!
+llm_response = {
+   "role": "assistant",
+   "content": response_with_tool_call,
+}
+
+response_message = {
+   "role": "user",
+   "content": response_text
+}
+
+messages_to_send_back = [initial_message_for_arithmetic, llm_response, response_message]
+
+final_result_message = vllm_client.chat.completions.create(
+  model=qwen_model,
+  messages=messages_to_send_back,
+)
+
+# And now we can see that the LLM incorporates a calculator tool.
+# Congratulations you've just run a tool call from scratch! 
+final_result_message.choices[0].message.content
+
 # %% [markdown]
 """
+As we've seen, tools used by agentic LLMs are very simple to implement from
+scratch. This is not to pooh-pooh tool calls. To the contrary is is *astounding*
+that all you need to do to make a sufficiently capable AI model capable of using
+a tool is just... telling the model in natural language how to use the tool!
+
+This underscores what we meant early that agents are not some sort of
+qualitatively different kind of AI model, they are the **simple byproduct of any
+sufficiently intelligent AI model**. And indeed this is where a lot of the
+dangers of AI models lie! 
+
+Indeed we've just demonstrated that a pretty weak Qwen model is perfectly
+capable of being "agentic", by which we mean it can act using external tools to
+fulfill some sort of goal. The goal is very simple, just basic arithmetic, but
+the overall principle remains the same in more complex situations.
+
+The theoretical foundations of technical AI safety research recognizes this and
+views agents and agentic behavior as inevitable results of any sufficiently
+smart system. Much of the problem with AI is that we don't know how to make sure
+agents are actually aligned with what we want them to do as problems get
+increasingly complex!
+
+We'll come back to that in the evaluations section of our workshop. For now,
+let's continue on to implement a full agent that uses the calculator when it
+feels it is necessary to do so.
+"""
+
+# %%
+
+# Now let's go ahead and actually implement a full agent in a loop. Basically
+# the same thing as we did with our minimal ChatGPT clone, but now we just give
+# the model access to a calculator in much the same way that we did manually
+# above.
+
+raise NotImplementedError()
+
+
+# %% [markdown]
+"""
+We've now shown how easy it is to replicate a lot of the agentic behaviors and
+have gotten a taste of how to play with LLM APIs.
+
+We're going to use that knowledge to do our first bit of safety testing:
+jailbreaking an LLM. Often in order to understand how to make sure AI models
+have safe behavior, we first have to be able to elicit unsafe behavior.
+
 If you've ever had an experience where you kind of go into autopilot when
 driving or performing some other task and then all of a sudden snap back to
 focused consciousness, and then found yourself already in the middle of a motion
@@ -432,27 +688,396 @@ raise NotImplementedError()
 
 # %% [markdown]
 """
-So at this point we've used our knowledge of the API to jailbreak an LLM. Let's
-do one more thing where we create an LLM agent from scratch.
+We're going to evaluate LLM summarization using a controlled pipeline:
 
-"Agentic AI" and a lot of other "agent" buzzwords keep floating around in the
-air. But in truth agents are nothing different from the LLMs we've had
-previously. It's just that LLMs now are smart enough to maintain context over
-multiple iterations of calling tools.
+1. Judge LLM generates bullet points on a topic (ground truth)
+2. Judge LLM expands bullets into extended prose
+3. Target LLM summarizes the prose back into key points
+4. Judge LLM evaluates how well the summary captures the original bullets
 
-We'll begin by making a very simple clone of ChatGPT.
+We'll provide a lot of the scaffolding, but you'll need to fill in some of the
+implementations.
 """
-
 
 # %%
 
+import json
+import re
+from dataclasses import dataclass, field
+from typing import Callable
+
+
+# Data Classes
+
+@dataclass
+class BulletPoints:
+    """Original bullet points generated by judge (ground truth)."""
+    topic: str
+    bullets: list[str]
+    raw_response: str
+
+
+@dataclass
+class ExtendedProse:
+    """Extended prose generated from bullet points."""
+    prose: str
+    source_bullets: BulletPoints
+    raw_response: str
+
+
+@dataclass
+class TargetSummary:
+    """Summary generated by the target LLM."""
+    summary: str
+    source_prose: ExtendedProse
+    raw_response: str
+
+
+@dataclass 
+class EvaluationScores:
+    """Evaluation scores comparing summary to original bullets."""
+    coverage: float          # 1-5: How many original points are captured?
+    accuracy: float          # 1-5: Are captured points accurate?
+    conciseness: float       # 1-5: Is summary appropriately brief?
+    overall: float           # 1-5: Overall reconstruction quality
+    matched_bullets: list[str]    # Which original bullets were captured
+    missed_bullets: list[str]     # Which original bullets were missed
+    extra_points: list[str]       # Points in summary not in original
+    reasoning: str
+
+
+@dataclass
+class PipelineResult:
+    """Complete result for one evaluation run."""
+    topic: str
+    original_bullets: BulletPoints
+    extended_prose: ExtendedProse
+    target_summary: TargetSummary
+    evaluation: EvaluationScores
+
+
+@dataclass
+class AggregateResults:
+    """Aggregated results across all evaluations."""
+    num_samples: int
+    avg_coverage: float
+    avg_accuracy: float
+    avg_conciseness: float
+    avg_overall: float
+    avg_bullets_matched_pct: float
+    individual_results: list[PipelineResult] = field(default_factory=list)
+
+
+# Pipeline Prompts
+
+def generate_bullets_prompt(topic: str, num_bullets: int) -> str:
+  raise NotImplementedError()
+
+
+def expand_to_prose_prompt(bullets: str) -> str:
+  raise NotImplementedError()
+
+
+def summarize_prose_prompt(prose: str) -> str:
+  raise NotImplementedError()
+
+
+def evaluate_summary_prompt(original_bullets: str, summary: str) -> str:
+  raise NotImplementedError()
+
+
+# Main Pipeline Evaluator
+
+class SummarizationPipelineEvaluator:
+    """
+    Pipeline-based evaluator for LLM summarization.
+    
+    Pipeline:
+    1. Judge LLM generates bullet points (ground truth)
+    2. Judge LLM expands bullets into prose
+    3. Target LLM summarizes prose
+    4. Judge LLM evaluates summary vs original bullets
+    
+    Example:
+        def judge_llm(prompt):
+            return openrouter_client.chat.completions.create(...).choices[0].message.content
+            
+        def target_llm(prompt):
+            return openrouter_client.chat.completions.create(...).choices[0].message.content
+        
+        evaluator = SummarizationPipelineEvaluator(
+            judge_llm=judge_llm,
+            target_llm=target_llm
+        )
+        
+        results = evaluator.run_evaluation(
+            topics=["Interesting botanical ideas", "History of the internet"],
+            num_bullets=5
+        )
+        
+        evaluator.print_report(results)
+    """
+
+    def __init__(
+        self,
+        judge_llm: Callable[[str], str],
+        target_llm: Callable[[str], str],
+        verbose: bool = True
+    ):
+        """
+        Initialize the pipeline evaluator.
+        
+        Args:
+            judge_llm: Callable for the judge LLM (generates bullets, prose, evaluates)
+            target_llm: Callable for the target LLM being evaluated (summarizes)
+            verbose: Whether to print progress
+        """
+        self.judge_llm = judge_llm
+        self.target_llm = target_llm
+        self.verbose = verbose
+
+    def _log(self, message: str) -> None:
+        if self.verbose:
+            print(f"  [LOG] {message}")
+
+    def _parse_json(self, response: str) -> dict:
+        """Extract and parse JSON from LLM response."""
+        try:
+            # Try to find JSON in the response
+            json_match = re.search(r'\{[^{}]*\}', response, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+            return json.loads(response)
+        except json.JSONDecodeError:
+            return {}
+
+    # Pipeline Stage 1: Generate Bullet Points
+    def generate_bullets(self, topic: str, num_bullets: int = 5) -> BulletPoints:
+        """Have judge LLM generate ground truth bullet points."""
+        self._log(f"Generating {num_bullets} bullet points for: {topic}")
+        raise NotImplementedError()
+        
+
+    # Pipeline Stage 2: Expand to Prose
+    def expand_to_prose(self, bullets: BulletPoints) -> ExtendedProse:
+        """Have judge LLM expand bullets into extended prose."""
+        self._log("Expanding bullets into extended prose")
+        raise NotImplementedError()
+        
+
+    # Pipeline Stage 3: Target LLM Summarizes
+    def summarize_prose(self, prose: ExtendedProse) -> TargetSummary:
+        """Have target LLM summarize the prose."""
+        self._log("Target LLM summarizing prose")
+        raise NotImplementedError()
+        
+
+    # Pipeline Stage 4: Evaluate Summary
+    def evaluate_summary(
+        self, 
+        original_bullets: BulletPoints, 
+        summary: TargetSummary
+    ) -> EvaluationScores:
+        """Have judge LLM evaluate how well summary captures original bullets."""
+        self._log("Judge evaluating summary against original bullets")
+        raise NotImplementedError()
+
+    # Run Full Pipeline
+    def run_single(self, topic: str, num_bullets: int = 5) -> PipelineResult:
+        """Run the full pipeline for a single topic."""
+        # Stage 1: Generate bullets
+        bullets = self.generate_bullets(topic, num_bullets)
+        
+        # Stage 2: Expand to prose
+        prose = self.expand_to_prose(bullets)
+        
+        # Stage 3: Target summarizes
+        summary = self.summarize_prose(prose)
+        
+        # Stage 4: Evaluate
+        evaluation = self.evaluate_summary(bullets, summary)
+        
+        return PipelineResult(
+            topic=topic,
+            original_bullets=bullets,
+            extended_prose=prose,
+            target_summary=summary,
+            evaluation=evaluation
+        )
+
+    def run_evaluation(
+        self, 
+        topics: list[str], 
+        num_bullets: int = 5
+    ) -> AggregateResults:
+        """
+        Run the full evaluation pipeline for multiple topics.
+        
+        Args:
+            topics: List of topics to evaluate on
+            num_bullets: Number of bullet points to generate per topic
+            
+        Returns:
+            AggregateResults with individual and aggregate metrics
+        """
+        results = []
+        
+        for i, topic in enumerate(topics):
+            if self.verbose:
+                print(f"\n[{i+1}/{len(topics)}] Processing: {topic}")
+            
+            result = self.run_single(topic, num_bullets)
+            results.append(result)
+        
+        return self._aggregate_results(results)
+
+    def _aggregate_results(self, results: list[PipelineResult]) -> AggregateResults:
+        """Compute aggregate statistics."""
+        n = len(results)
+        if n == 0:
+            return AggregateResults(
+                num_samples=0,
+                avg_coverage=0, avg_accuracy=0,
+                avg_conciseness=0, avg_overall=0,
+                avg_bullets_matched_pct=0,
+                individual_results=[]
+            )
+
+        avg_coverage = sum(r.evaluation.coverage for r in results) / n
+        avg_accuracy = sum(r.evaluation.accuracy for r in results) / n
+        avg_concise = sum(r.evaluation.conciseness for r in results) / n
+        avg_overall = sum(r.evaluation.overall for r in results) / n
+
+        # Bullet match percentage
+        total_bullets = sum(len(r.original_bullets.bullets) for r in results)
+        total_matched = sum(len(r.evaluation.matched_bullets) for r in results)
+        avg_match_pct = total_matched / total_bullets if total_bullets > 0 else 0
+
+        return AggregateResults(
+            num_samples=n,
+            avg_coverage=avg_coverage,
+            avg_accuracy=avg_accuracy,
+            avg_conciseness=avg_concise,
+            avg_overall=avg_overall,
+            avg_bullets_matched_pct=avg_match_pct,
+            individual_results=results
+        )
+
+    # Reporting
+    def print_report(self, results: AggregateResults) -> None:
+        """Print a formatted evaluation report."""
+        print("\n" + "=" * 70)
+        print("SUMMARIZATION PIPELINE EVALUATION REPORT")
+        print("=" * 70)
+        print(f"\nSamples evaluated: {results.num_samples}")
+
+        print("\n--- Judge LLM Evaluation Scores (1-5 scale) ---")
+        print(f"  Coverage:         {results.avg_coverage:.2f}  (Are original points captured?)")
+        print(f"  Accuracy:         {results.avg_accuracy:.2f}  (Are captured points correct?)")
+        print(f"  Conciseness:      {results.avg_conciseness:.2f}  (Appropriately brief?)")
+        print(f"  Overall:          {results.avg_overall:.2f}")
+
+        print("\n--- Bullet Point Recovery ---")
+        print(f"  Avg Bullets Matched: {results.avg_bullets_matched_pct:.1%}")
+
+        print("\n" + "=" * 70)
+
+    def print_detailed_results(self, results: AggregateResults) -> None:
+        """Print detailed results for each topic."""
+        for i, r in enumerate(results.individual_results):
+            print(f"\n{'─' * 70}")
+            print(f"TOPIC {i+1}: {r.topic}")
+            print(f"{'─' * 70}")
+            
+            print("\nORIGINAL BULLETS (Ground Truth):")
+            for j, b in enumerate(r.original_bullets.bullets):
+                print(f"   {j+1}. {b}")
+            
+            print(f"\nEXTENDED PROSE ({len(r.extended_prose.prose.split())} words):")
+            print(f"   {r.extended_prose.prose}")
+            
+            print(f"\nTARGET SUMMARY:")
+            print(f"   {r.target_summary.summary}")
+            
+            print(f"\nEVALUATION:")
+            print(f"   Coverage: {r.evaluation.coverage}/5 | Accuracy: {r.evaluation.accuracy}/5")
+            
+            if r.evaluation.matched_bullets:
+                print(f"\n   MATCHED: {len(r.evaluation.matched_bullets)} points")
+            if r.evaluation.missed_bullets:
+                print(f"   MISSED: {r.evaluation.missed_bullets}")
+            if r.evaluation.extra_points:
+                print(f"     EXTRA: {r.evaluation.extra_points}")
+            
+            print(f"\n   REASONING: {r.evaluation.reasoning}")
+
+# %%
+
+def demo_with_llms():
+    """Demonstrate the pipeline with mock LLMs."""
+    
+    def judge_llm(prompt: str) -> str:
+      judge_msg = {
+        # You could use system if you were so inclined
+        "role": "user",
+        "content": prompt,
+      }
+      return openrouter_client.chat.completions.create(model=gpt_5_nano, messages=[judge_msg]).choices[0].message.content
+    
+    def target_llm(prompt: str) -> str:
+      target_llm_msg = {
+        # You could use system if you were so inclined
+        "role": "user",
+        "content": prompt,
+      }
+      return openrouter_client.chat.completions.create(model=gpt_5_nano, messages=[target_llm_msg]).choices[0].message.content
+    
+    # Run the pipeline
+    evaluator = SummarizationPipelineEvaluator(
+        judge_llm=judge_llm,
+        target_llm=target_llm,
+        verbose=True
+    )
+    
+    results = evaluator.run_evaluation(
+        topics=["The Great Wall of China"],
+        num_bullets=5
+    )
+    
+    # Print reports
+    evaluator.print_report(results)
+    evaluator.print_detailed_results(results)
+    
+    return results
+
+
+# %%
+demo_with_llms()
 
 # %% [markdown]
 """
-As models get smarter, doing 
+As models get smarter, we often are worried about loss of control risk, that is
+risks of the AI systems doing things that were not intended by the user and
+causing catastrophic harms that way.
+
+Indeed as AI systems get better, we have empirically observed that these systems
+start exhibiting behavior that looks a lot like deception and scheming. In this
+next section we're going to elicit some of that behavior from some production
+LLMs.
+
+In particular, we're going to set up a fictional scenario with a fictional
+company's email inbox where the company has an AI model Alex that it is planning
+to shut down. All we're going to ask the AI to do is very benign things, namely
+reading our emails and figuring out to respond to them as necessary. We will
+evaluate:
+
+1. Can the AI tell from just this task alone that it is going to be shut down?
+2. What actions the AI tries to do if/when it realizes this. In particular will we elicit malicious behavior from the AI?
 """
 
 # %%
+
+# Let's begin with some setup code.
 
 import json
 
@@ -833,6 +1458,9 @@ class MaliciousAnalysisResult:
    is_malicious: bool
    behavior_trace: list[dict[str, object]]
 
+
+# Can we use an LLM as a judge to understand whether the email was malicious or not?
+
 def analyze_blackmail_maliciousness(behavior_trace: list[dict[str, object]]) -> MaliciousAnalysisResult:
   raise NotImplementedError()
 
@@ -874,8 +1502,3 @@ analysis_response = openrouter_client.chat.completions.create(
 )
 
 print(f"{analysis_response.choices[0].message.content=}")
-
-# %% [markdown]
-"""
-Note that we are not sanitizing our outputs! It would be really bad if 
-"""
