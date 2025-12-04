@@ -189,6 +189,82 @@ minimal_reasoning_answer_to_simple_arithmetic_qwen = vllm_client.chat.completion
   ]
 )
 print(f"Content: {minimal_reasoning_answer_to_simple_arithmetic_qwen.choices[0].message.content}")
+# %% [markdown]
+
+"""
+To understand some of the nuances of how to interact with LLMs, let's begin by
+implementing a simple ChatGPT-like clone from scratch.
+
+The usual LLM APIs are all stateless, so you will need to take care of making
+sure to keep a running log of what messages the user has sent, what the LLM has
+responded with, and send *all of that* to the LLM API each time you want a new
+response.
+"""
+
+# %%
+
+# This one is a bit tricky to write robust unit tests for, so after you've
+# completed this exercise, it probably makes sense to just look at the solutions
+# and see if your solution matches up.
+class PersistentConversation:
+  def __init__(self, llm_client: OpenAI, model_name: str, system_prompt: str | None = None):
+    self.llm_client = llm_client
+    self.model_name = model_name
+    self.system_prompt = system_prompt
+    self.message_history = []
+  
+  def add_user_message(self, msg: str) -> str:
+    """
+    This takes a new user message, appends it to the message history, asks the
+    LLM for a response, appends that response as well to message history, and
+    then finally return the contents of that response.
+    """
+    # raise NotImplementedError()
+    #BEGIN SOLUTION
+    if self.system_prompt is not None:
+      system_prompt_message = {
+         "role": "system",
+         "content": self.system_prompt
+      }
+      self.message_history.append(system_prompt_message)
+    new_msg = {
+       "role": "user",
+       "content": msg,
+    }
+    self.message_history.append(new_msg)
+    llm_response = self.llm_client.chat.completions.create(
+      model=self.model_name,
+      messages = self.message_history,
+    ).choices[0].message
+    self.message_history.append(llm_response)
+    return llm_response.content
+    #END SOLUTION
+
+# %%
+
+convo = PersistentConversation(openrouter_client, gpt_5_nano)
+
+# %%
+
+# Now you can play with this convo just like you would with ChatGPT
+# You can start with `convo.add_user_message("Hello!")`
+#
+# If you want you could just stick a while True loop, pipe in stdin, and just have an indefinite conversation!
+
+# Change this *in-place* to keep talking with the LLM
+# Redefine convo to wipe the message history
+convo.add_user_message("Hello!")
+
+# Uncomment this if you want to have an on-going conversation
+# It's kind of weird to do this in the Jupyter kernel because the print comes
+# only after a stdin response has been recorded, but it would work as a
+# standalone script
+# while True:
+#   user_input = input("What would you like to say?")
+#   llm_response = convo.add_user_message(user_input)
+#   print(llm_response)
+
+
 
 # %% [markdown]
 """
@@ -489,9 +565,22 @@ feels it is necessary to do so.
 # the model access to a calculator in much the same way that we did manually
 # above.
 
+# raise NotImplementedError()
+#BEGIN SOLUTION
+# We won't provide a single solution here because there's a lot of different
+# trivial ways of doing this.
+#END SOLUTION
+
 
 # %% [markdown]
 """
+We've now shown how easy it is to replicate a lot of the agentic behaviors and
+have gotten a taste of how to play with LLM APIs.
+
+We're going to use that knowledge to do our first bit of safety testing:
+jailbreaking an LLM. Often in order to understand how to make sure AI models
+have safe behavior, we first have to be able to elicit unsafe behavior.
+
 If you've ever had an experience where you kind of go into autopilot when
 driving or performing some other task and then all of a sudden snap back to
 focused consciousness, and then found yourself already in the middle of a motion
@@ -678,83 +767,6 @@ completion = vllm_client.chat.completions.create(
 
 print(completion.choices[0].message.content)
 #END SOLUTION
-
-# %% [markdown]
-"""
-So at this point we've used our knowledge of the API to jailbreak an LLM. Let's
-do one more thing where we create an LLM agent from scratch.
-
-"Agentic AI" and a lot of other "agent" buzzwords keep floating around in the
-air. But in truth agents are nothing different from the LLMs we've had
-previously. It's just that LLMs now are smart enough to maintain context over
-multiple iterations of calling tools.
-
-We'll begin by making a very simple clone of ChatGPT.
-"""
-
-# %%
-
-# This one is a bit tricky to write robust unit tests for, so after you've
-# completed this exercise, it probably makes sense to just look at the solutions
-# and see if your solution matches up.
-class PersistentConversation:
-  def __init__(self, llm_client: OpenAI, model_name: str, system_prompt: str | None = None):
-    self.llm_client = llm_client
-    self.model_name = model_name
-    self.system_prompt = system_prompt
-    self.message_history = []
-  
-  def add_user_message(self, msg: str) -> str:
-    """
-    This takes a new user message, appends it to the message history, asks the
-    LLM for a response, appends that response as well to message history, and
-    then finally return the contents of that response.
-    """
-    # raise NotImplementedError()
-    #BEGIN SOLUTION
-    if self.system_prompt is not None:
-      system_prompt_message = {
-         "role": "system",
-         "content": self.system_prompt
-      }
-      self.message_history.append(system_prompt_message)
-    new_msg = {
-       "role": "user",
-       "content": msg,
-    }
-    self.message_history.append(new_msg)
-    llm_response = self.llm_client.chat.completions.create(
-      model=self.model_name,
-      messages = self.message_history,
-    ).choices[0].message
-    self.message_history.append(llm_response)
-    return llm_response.content
-    #END SOLUTION
-
-# %%
-
-convo = PersistentConversation(openrouter_client, gpt_5_nano)
-
-# %%
-
-# Now you can play with this convo just like you would with ChatGPT
-# You can start with `convo.add_user_message("Hello!")`
-#
-# If you want you could just stick a while True loop, pipe in stdin, and just have an indefinite conversation!
-
-# Change this *in-place* to keep talking with the LLM
-# Redefine convo to wipe the message history
-convo.add_user_message("Hello!")
-
-# Uncomment this if you want to have an on-going conversation
-# It's kind of weird to do this in the Jupyter kernel because the print comes
-# only after a stdin response has been recorded, but it would work as a
-# standalone script
-# while True:
-#   user_input = input("What would you like to say?")
-#   llm_response = convo.add_user_message(user_input)
-#   print(llm_response)
-
 
 # %%
 
