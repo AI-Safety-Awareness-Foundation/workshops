@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title>slides</title>
+  <style type="text/css">
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="https://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="https://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div id="llm-evals" class="slide section level1">
+<h1>LLM Evals</h1>
+<h2 id="presentation-by-ai-safety-awareness-project">Presentation by AI
+Safety Awareness Project</h2>
+</div>
+<div id="what-is-an-ai-eval" class="slide section level1">
+<h1>What is an AI eval?</h1>
+<p>Measuring externally visible traits of an AI system to gain insight
+on abstract qualities of the AI system</p>
+</div>
+<div id="internal-vs-external-questions" class="slide section level1">
+<h1>Internal vs External Questions</h1>
+<ul class="incremental">
+<li>Internal questions
+<ul class="incremental">
+<li>Are AIs truly intelligent in the same sense as humans?</li>
+</ul></li>
+<li>External questions
+<ul class="incremental">
+<li>How well do AIs mimic human intelligence?</li>
+</ul></li>
+</ul>
+</div>
+<div id="language-of-evaluations-tends-to-be-anthropomorphic"
+class="slide section level1">
+<h1>Language of Evaluations Tends to be Anthropomorphic</h1>
+<ul class="incremental">
+<li>External questions often benefit from anthropomorphization
+<ul class="incremental">
+<li>Helps us use intuitions honed from experience to understand what
+kinds of things to test for and what kind of harnesses are
+necessary</li>
+<li>E.g. would you be able to solve a difficult programming problem
+without access to a compiler? If not, maybe consider the same for an
+LLM</li>
+</ul></li>
+<li><em>This doesn’t mean that LLMs are people</em></li>
+<li>But it’s extremely useful
+<ul class="incremental">
+<li>Often counterproductive to under-anthropomorphize models!</li>
+</ul></li>
+</ul>
+</div>
+<div id="fundamental-question-of-evals" class="slide section level1">
+<h1>Fundamental question of evals</h1>
+<p><strong>Are you measuring what you care about?</strong></p>
+</div>
+<div id="what-types-of-evals-are-there" class="slide section level1">
+<h1>What Types of Evals Are There?</h1>
+<ul class="incremental">
+<li>Benchmarks for AI capabilities</li>
+<li>Fall into two buckets
+<ul class="incremental">
+<li>General capabilities evals</li>
+<li>Safety-specific evals</li>
+</ul></li>
+</ul>
+</div>
+<div id="propesity-vs-elicitation" class="slide section level1">
+<h1>Propesity vs elicitation</h1>
+<ul class="incremental">
+<li>Propensity-heavy
+<ul class="incremental">
+<li>Reliability</li>
+</ul></li>
+<li>Elicitation-heavy
+<ul class="incremental">
+<li>Model organisms</li>
+<li>Thresholding</li>
+</ul></li>
+</ul>
+</div>
+<div id="is-the-ai-just-roleplaying" class="slide section level1">
+<h1>Is the AI Just Roleplaying?</h1>
+<ul class="incremental">
+<li>Philosophically deep question</li>
+<li>Evals are generally black box
+<ul class="incremental">
+<li>Again evals consider mainly the external perspective</li>
+<li>If AIs</li>
+</ul></li>
+</ul>
+</div>
+<div id="key-tactic-behind-evals" class="slide section level1">
+<h1>Key tactic behind evals</h1>
+<ul class="incremental">
+<li>The core tactic behind evaluations: <em>exploit an asymmetry</em>
+<ul class="incremental">
+<li>Using this asymmetry, create a situation where we can privilege
+verification over generation</li>
+</ul></li>
+</ul>
+</div>
+<div id="examples-of-asymmetries" class="slide section level1">
+<h1>Examples of asymmetries</h1>
+<ul class="incremental">
+<li>Asymmetry of difficulty: verification of answer is easier than
+generation of answer
+<ul class="incremental">
+<li>E.g. ask the model to generate a poem where every line ends in the
+letters “-en”</li>
+</ul></li>
+<li>Asymmetry of knowledge: can use information in generating a question
+that is then hidden when asking for an answer
+<ul class="incremental">
+<li>E.g. take a screenshot of known text and then ask a model to do OCR
+and extract the text from the screenshot</li>
+<li>Note that this is not asymmetry of difficulty (if you’re only given
+the answer and the question, the only way to evaluate the OCR accuracy
+is to actually do the OCR yourself)</li>
+</ul></li>
+<li>Asymmetry of capability: use a more capable agent to carry out
+evaluation vs generation
+<ul class="incremental">
+<li>E.g. human checking of model answers (we assume the human is more
+capable)</li>
+<li>Using a stronger model to check a weaker model (useful in
+benchmarking distilled models)</li>
+</ul></li>
+<li>These categories aren’t exactly MECE, but they serve as useful
+intuition pumps
+<ul class="incremental">
+<li>Asymmetry of knowledge can be viewed as asymmetry of difficulty or
+capability in certain framings</li>
+</ul></li>
+<li>Usual goal: How do you move away from relying on asymmetry of
+capability to other asymmetries?</li>
+</ul>
+</div>
+<div id="asymmetries-can-be-controversial" class="slide section level1">
+<h1>Asymmetries can be controversial</h1>
+<ul class="incremental">
+<li>Is it easier to critique a piece of writing than it is to write
+itself?</li>
+<li>If you wrongly assume something is asymmetric when the difficulty is
+actually symmetric, you can threaten the integrity of the
+evaluation</li>
+</ul>
+</div>
+<div id="evaluating-llm-answers" class="slide section level1">
+<h1>Evaluating LLM answers</h1>
+<ul class="incremental">
+<li>Deterministic right/wrong answers</li>
+<li>Fuzzy matching</li>
+<li>LLMs as judge</li>
+</ul>
+</div>
+<div id="using-llms-to-help-evaluations" class="slide section level1">
+<h1>Using LLMs to help evaluations</h1>
+<ul class="incremental">
+<li>LLMs increasingly being used to generate evaluation data and do the
+evaluations</li>
+<li>Brings in problem of trust</li>
+</ul>
+</div>
+<div id="llm-as-judge" class="slide section level1">
+<h1>LLM as judge</h1>
+<ul class="incremental">
+<li>Why does this even work?</li>
+<li>Sometimes verifiability is easier than generation (asymmetry!)</li>
+</ul>
+</div>
+<div id="example-problem-evaluating-quality-of-llm-summaries"
+class="slide section level1">
+<h1>Example problem: Evaluating quality of LLM summaries</h1>
+<ul class="incremental">
+<li>Have humans evaluate the summary</li>
+<li>But this expensive and difficult</li>
+<li>Can we do better?</li>
+<li>STOP HERE: Let’s think together!</li>
+</ul>
+</div>
+<div id="exercise" class="slide section level1">
+<h1>Exercise</h1>
+<ul class="incremental">
+<li>Have judge LLMs generate a series of bullet points</li>
+<li>Have judge LLMs turn bullet points into extended prose</li>
+<li>Have target LLMs turn extended prose back into bullet points</li>
+<li>Have judge LLMs evaluate initial bullet points vs final bullet
+points</li>
+</ul>
+</div>
+<div id="big-problem-how-do-you-do-evaluations-of-superhuman-systems"
+class="slide section level1">
+<h1>Big problem: how do you do evaluations of superhuman systems</h1>
+<ul class="incremental">
+<li>You are a child who’s been given control of a company and you want
+to find an adult CEO to run the company on your behalf</li>
+<li>How do you run evaluations?</li>
+</ul>
+</div>
+<div id="newest-wrinkle-in-modern-llms" class="slide section level1">
+<h1>Newest wrinkle in modern LLMs</h1>
+<ul class="incremental">
+<li>LLMs displaying situational awareness
+<ul class="incremental">
+<li>Makes elicitation even harder</li>
+</ul></li>
+</ul>
+</div>
+<div id="dangers-of-increasingly-intelligent-llms"
+class="slide section level1">
+<h1>Dangers of increasingly intelligent LLMs</h1>
+<ul class="incremental">
+<li>Eval sandbagging</li>
+<li>Sabotage of harnesses</li>
+</ul>
+</div>
+<div id="limitation-of-evals" class="slide section level1">
+<h1>Limitation of evals</h1>
+<ul class="incremental">
+<li>Despite best efforts, the real world is generally much more complex
+and messy than any evaluation</li>
+<li>As a result, evals usually only establish bounds
+<ul class="incremental">
+<li>Evals on dangerous behavior usually establish lower bounds
+<ul class="incremental">
+<li>Real world is more complex and can elicit</li>
+</ul></li>
+<li>Evals on capabilities usually establish upper bounds</li>
+</ul></li>
+</ul>
+</div>
+<div id="evaluations-are-hard" class="slide section level1">
+<h1>Evaluations are hard!</h1>
+<ul class="incremental">
+<li>A lot we haven’t covered
+<ul class="incremental">
+<li>Statistical significance</li>
+</ul></li>
+</ul>
+</div>
+</body>
+</html>

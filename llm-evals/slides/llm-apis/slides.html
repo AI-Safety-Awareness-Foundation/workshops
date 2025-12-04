@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title>slides</title>
+  <style type="text/css">
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="https://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="https://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div id="llm-api" class="slide section level1">
+<h1>LLM API</h1>
+<ul class="incremental">
+<li>For evals we usually focus on a standardized LLM API</li>
+<li>API that you will normally see exposed in HTTP endpoint</li>
+<li>One-level above raw model input output
+<ul class="incremental">
+<li>Raw model input: tokens</li>
+<li>Raw model output: one probability distribution per input token</li>
+</ul></li>
+<li>API
+<ul class="incremental">
+<li>API input: conversation</li>
+<li>API output: conversation continuation</li>
+</ul></li>
+<li>API design has remained fairly stable
+<ul class="incremental">
+<li>Core of APIs hasn’t really changed in 3 years</li>
+</ul></li>
+</ul>
+</div>
+<div id="mental-model" class="slide section level1">
+<h1>Mental model</h1>
+<ul class="incremental">
+<li>Man in a room
+<ul class="incremental">
+<li>Gets a piece of paper</li>
+<li>Piece of paper has words annotated in all sorts of different
+ways</li>
+</ul></li>
+<li>Man reads it and is asked to complete the next set</li>
+</ul>
+</div>
+<div id="is-this-just-autocomplete" class="slide section level1">
+<h1>Is this just autocomplete?</h1>
+<ul class="incremental">
+<li>Depends on how sophisticated your notion of autocomplete is!</li>
+<li>But a naive understanding of autocomplete can cause problems
+<ul class="incremental">
+<li>These models are <em>not</em> the “median of their input data”
+<ul class="incremental">
+<li>Generally models tend to far outperform the median of their input
+data! (E.g. why did even GPT-3 in 2020 have basically perfect
+spelling?)</li>
+</ul></li>
+<li>These models are <em>not</em> blank slates that mimic whatever input
+you give them
+<ul class="incremental">
+<li>Models often have something emulating a “base personality” which is
+a major target of evals to uncover!</li>
+</ul></li>
+<li>This misses the post-training step</li>
+</ul></li>
+</ul>
+</div>
+<div id="no-real-distinction-between-agentic-llms-and-base-llms"
+class="slide section level1">
+<h1>No real distinction between “agentic LLMs” and “base LLMs”</h1>
+<ul class="incremental">
+<li>They’re all just data in and data out!</li>
+<li>Agentic LLMs are just about piping LLM outputs to tool inputs and
+tool outputs to LLM inputs</li>
+</ul>
+</div>
+<div id="levels-of-spec" class="slide section level1">
+<h1>Levels of spec</h1>
+<ul class="incremental">
+<li>Company spec</li>
+<li>System prompt</li>
+<li>User prompt</li>
+</ul>
+</div>
+</body>
+</html>
