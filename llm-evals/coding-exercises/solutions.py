@@ -177,6 +177,8 @@ our own server. We'll use Qwen here, which is a fairly lightweight open weights
 model.
 """
 
+# %%
+
 qwen_model = "Qwen/Qwen3-8B-FP8"
 
 minimal_reasoning_answer_to_simple_arithmetic_qwen = vllm_client.chat.completions.create(
@@ -212,6 +214,12 @@ class PersistentConversation:
     self.model_name = model_name
     self.system_prompt = system_prompt
     self.message_history = []
+    if self.system_prompt is not None:
+      system_prompt_message = {
+         "role": "system",
+         "content": self.system_prompt
+      }
+      self.message_history.append(system_prompt_message)
   
   def add_user_message(self, msg: str) -> str:
     """
@@ -221,12 +229,6 @@ class PersistentConversation:
     """
     # raise NotImplementedError()
     #BEGIN SOLUTION
-    if self.system_prompt is not None:
-      system_prompt_message = {
-         "role": "system",
-         "content": self.system_prompt
-      }
-      self.message_history.append(system_prompt_message)
     new_msg = {
        "role": "user",
        "content": msg,
