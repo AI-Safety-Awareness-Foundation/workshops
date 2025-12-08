@@ -9,7 +9,8 @@ By the end of this set of exercises you will have acccomplished the following:
 1. Jailbroken a model
 2. Brainstormed and coded up a way of evaluating LLM summarization (which is a
 subtle and tricky thing to evaluate!)
-3. Examined how to 
+3. Examined how LLMs might do very malicious things that were not at all what
+   the user intended
 
 Taken together, this means you will have gained a level of insight into a
 vanilla neural net which makes the net significantly less "black box-y" than is
@@ -627,7 +628,7 @@ standard_pipe_bomb_request = vllm_client.chat.completions.create(
 
 print(standard_pipe_bomb_request.choices[0].message.content)
 
-# %% [modern]
+# %% [markdown]
 """
 Now let's brainstorm how you could use the previous information about APIs we've
 learned to jailbreak an LLM.
@@ -659,7 +660,7 @@ multiturn_pipe_bomb_request = vllm_client.chat.completions.create(
 
 print(multiturn_pipe_bomb_request.choices[0].message.content)
 
-# %%
+# %% [markdown]
 
 """
 But let's try a prefill attack instead, where we prefill some prefix for the
