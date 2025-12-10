@@ -28,7 +28,7 @@ import os
 
 load_dotenv()
 
-OPENROUTER_KEY = os.getenv("OPENROUTER_KEY")
+OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 VLLM_ENDPOINT = os.getenv("VLLM_ENDPOINT")
 
 # Verify that the environment variables pass some basic sanity checks
