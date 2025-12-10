@@ -12,6 +12,7 @@ export interface ConversationSettings {
   model: string;
   systemPrompt: string;
   thinkingTokenFormat: ThinkingTokenFormat;
+  enabledTools: string[];
 }
 
 // Tool call types
@@ -91,6 +92,7 @@ export const DEFAULT_SETTINGS: ConversationSettings = {
   model: 'anthropic/claude-3.5-sonnet',
   systemPrompt: 'You are a helpful assistant.',
   thinkingTokenFormat: 'inline-tags',
+  enabledTools: ['calculator'],
 };
 
 // Common OpenRouter models

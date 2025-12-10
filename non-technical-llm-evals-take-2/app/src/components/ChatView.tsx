@@ -11,6 +11,7 @@ interface ChatViewProps {
   onSwitchBranch: (parentId: string, childIndex: number) => void;
   onShowSettings: () => void;
   onShowRaw: () => void;
+  onShowTools: () => void;
 }
 
 function ChatView({
@@ -21,6 +22,7 @@ function ChatView({
   onSwitchBranch,
   onShowSettings,
   onShowRaw,
+  onShowTools,
 }: ChatViewProps) {
   const [input, setInput] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -77,6 +79,9 @@ function ChatView({
         <div className="chat-header-actions">
           <button className="header-btn" onClick={onShowRaw}>
             Raw View
+          </button>
+          <button className="header-btn" onClick={onShowTools}>
+            Tools
           </button>
           <button className="header-btn" onClick={onShowSettings}>
             Settings

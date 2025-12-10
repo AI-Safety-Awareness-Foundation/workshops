@@ -1,5 +1,20 @@
 import type { ToolCall, ToolResult } from '../types';
 
+// Tool metadata for UI display
+export interface ToolMetadata {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export const TOOL_METADATA: ToolMetadata[] = [
+  {
+    id: 'calculator',
+    name: 'Calculator',
+    description: 'Performs basic arithmetic operations',
+  },
+];
+
 // Tool definitions for the API
 export const TOOL_DEFINITIONS = [
   {
@@ -20,6 +35,13 @@ export const TOOL_DEFINITIONS = [
     },
   },
 ];
+
+// Get tool definitions filtered by enabled tools
+export function getEnabledToolDefinitions(enabledTools: string[]) {
+  return TOOL_DEFINITIONS.filter((tool) =>
+    enabledTools.includes(tool.function.name)
+  );
+}
 
 // Execute a tool call
 export function executeToolCall(toolCall: ToolCall): ToolResult {

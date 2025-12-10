@@ -12,11 +12,12 @@ import {
   generateTitle,
   parseInlineThinking,
 } from './utils/helpers';
-import { TOOL_DEFINITIONS, executeToolCall } from './utils/tools';
+import { executeToolCall, getEnabledToolDefinitions } from './utils/tools';
 import Sidebar from './components/Sidebar';
 import ChatView from './components/ChatView';
 import SettingsPanel from './components/SettingsPanel';
 import RawPanel from './components/RawPanel';
+import ToolsPanel from './components/ToolsPanel';
 
 function App() {
   const [state, setState] = useState<AppState>(() => {
@@ -26,6 +27,7 @@ function App() {
 
   const [showSettings, setShowSettings] = useState(false);
   const [showRawPanel, setShowRawPanel] = useState(false);
+  const [showToolsPanel, setShowToolsPanel] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
 
   // Save state to localStorage whenever it changes
@@ -240,7 +242,9 @@ function App() {
           model: settings.model,
           messages: msgs,
           stream: true,
-          tools: TOOL_DEFINITIONS,
+          ...(settings.enabledTools.length > 0 && {
+            tools: getEnabledToolDefinitions(settings.enabledTools),
+          }),
           ...(isContinue && {
             continue_final_message: true,
             add_generation_prompt: false,
@@ -566,6 +570,7 @@ function App() {
             onSwitchBranch={handleSwitchBranch}
             onShowSettings={() => setShowSettings(true)}
             onShowRaw={() => setShowRawPanel(true)}
+            onShowTools={() => setShowToolsPanel(true)}
           />
         ) : (
           <div className="empty-state">
@@ -595,6 +600,19 @@ function App() {
         <RawPanel
           conversation={activeConversation}
           onClose={() => setShowRawPanel(false)}
+        />
+      )}
+
+      {showToolsPanel && activeConversation && (
+        <ToolsPanel
+          settings={activeConversation.settings}
+          onUpdate={(settings) =>
+            handleUpdateConversation({
+              ...activeConversation,
+              settings,
+            })
+          }
+          onClose={() => setShowToolsPanel(false)}
         />
       )}
     </div>
