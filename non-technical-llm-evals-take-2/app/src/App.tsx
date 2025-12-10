@@ -3,6 +3,7 @@ import type { AppState, Conversation, MessageContent, ToolCall } from './types';
 import {
   createConversation,
   createMessage,
+  createToolMessage,
   addMessage,
   updateMessage,
   getActivePath,
@@ -185,7 +186,41 @@ function App() {
     let fullContent = prefill || '';
     let hasToolCalls = false;
 
-    const makeRequest = async (msgs: ApiMessage[]): Promise<void> => {
+    // Helper to update a message's content
+    const updateMessageContent = (targetMessageId: string, text: string, pendingToolCalls: Array<{ id: string; name: string; arguments: string }>) => {
+      setState((prev) => {
+        const conv = prev.conversations[conversation.id];
+        if (!conv) return prev;
+
+        // Parse current text content based on thinking token format
+        const currentTextContent: MessageContent[] =
+          settings.thinkingTokenFormat === 'inline-tags'
+            ? parseInlineThinking(text)
+            : text ? [{ type: 'text' as const, content: text }] : [];
+
+        // Add pending tool call content (no results yet)
+        const pendingToolContent: MessageContent[] = pendingToolCalls.map((tc) => ({
+          type: 'tool_call' as const,
+          toolCall: { id: tc.id, name: tc.name, arguments: tc.arguments },
+        }));
+
+        const allContent = [...currentTextContent, ...pendingToolContent];
+
+        return {
+          ...prev,
+          conversations: {
+            ...prev.conversations,
+            [conv.id]: updateMessage(conv, targetMessageId, {
+              rawContent: text,
+              content: allContent.length > 0 ? allContent : [{ type: 'text', content: '' }],
+            }),
+          },
+        };
+      });
+    };
+
+    // Helper to stream a request and update a specific message
+    const streamToMessage = async (msgs: ApiMessage[], targetMessageId: string): Promise<void> => {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -234,7 +269,7 @@ function App() {
               const delta = choice?.delta?.content;
               if (delta) {
                 fullContent += delta;
-                updateMessageContent(fullContent, []);
+                updateMessageContent(targetMessageId, fullContent, []);
               }
 
               // Handle tool calls
@@ -251,7 +286,7 @@ function App() {
 
                 // Update UI with accumulated tool calls
                 const toolCalls = Array.from(accumulatedToolCalls.values());
-                updateMessageContent(fullContent, toolCalls);
+                updateMessageContent(targetMessageId, fullContent, toolCalls);
               }
             } catch {
               // Skip invalid JSON
@@ -261,90 +296,83 @@ function App() {
       }
     };
 
-    // Track finalized content from previous phases (thinking, text, executed tool calls)
-    // This preserves content across tool call cycles
-    let finalizedContent: MessageContent[] = [];
-    let allRawContent = '';
+    // Make initial request, streaming to the first assistant message
+    await streamToMessage(apiMessages, messageId);
 
-    const updateMessageContent = (text: string, pendingToolCalls: Array<{ id: string; name: string; arguments: string }>) => {
+    // If there were tool calls, execute them and continue
+    if (hasToolCalls && accumulatedToolCalls.size > 0) {
+      const toolCalls = Array.from(accumulatedToolCalls.values());
+
+      // Finalize the first assistant message with tool calls (including any thinking)
+      const contentBeforeTools: MessageContent[] =
+        settings.thinkingTokenFormat === 'inline-tags'
+          ? parseInlineThinking(fullContent)
+          : fullContent ? [{ type: 'text' as const, content: fullContent }] : [];
+
+      // Add tool calls to the first assistant message
+      const toolCallContent: MessageContent[] = toolCalls.map((tc) => ({
+        type: 'tool_call' as const,
+        toolCall: { id: tc.id, name: tc.name, arguments: tc.arguments },
+      }));
+
+      // Update first assistant message
       setState((prev) => {
         const conv = prev.conversations[conversation.id];
         if (!conv) return prev;
-
-        // Parse current text content based on thinking token format
-        const currentTextContent: MessageContent[] =
-          settings.thinkingTokenFormat === 'inline-tags'
-            ? parseInlineThinking(text)
-            : text ? [{ type: 'text' as const, content: text }] : [];
-
-        // Add pending tool call content (no results yet)
-        const pendingToolContent: MessageContent[] = pendingToolCalls.map((tc) => ({
-          type: 'tool_call' as const,
-          toolCall: { id: tc.id, name: tc.name, arguments: tc.arguments },
-        }));
-
-        // Combine: finalized content + current text/thinking + pending tools
-        const allContent = [...finalizedContent, ...currentTextContent, ...pendingToolContent];
 
         return {
           ...prev,
           conversations: {
             ...prev.conversations,
             [conv.id]: updateMessage(conv, messageId, {
-              rawContent: allRawContent + text,
-              content: allContent.length > 0 ? allContent : [{ type: 'text', content: '' }],
+              rawContent: fullContent,
+              content: [...contentBeforeTools, ...toolCallContent],
             }),
           },
         };
       });
-    };
 
-    // Make initial request
-    await makeRequest(apiMessages);
-
-    // If there were tool calls, execute them and continue
-    if (hasToolCalls && accumulatedToolCalls.size > 0) {
-      const toolCalls = Array.from(accumulatedToolCalls.values());
-
-      // Execute each tool call and collect results
+      // Execute tool calls and create tool messages
       const toolResults: Array<{ toolCallId: string; result: string }> = [];
-
-      // First, finalize the content from before tool execution (including thinking)
-      const contentBeforeTools: MessageContent[] =
-        settings.thinkingTokenFormat === 'inline-tags'
-          ? parseInlineThinking(fullContent)
-          : fullContent ? [{ type: 'text' as const, content: fullContent }] : [];
-
-      // Add to finalized content
-      finalizedContent.push(...contentBeforeTools);
-      allRawContent += fullContent;
+      const toolMessages: Array<ReturnType<typeof createToolMessage>> = [];
+      let lastMessageId = messageId;
 
       for (const tc of toolCalls) {
         const toolCall: ToolCall = { id: tc.id, name: tc.name, arguments: tc.arguments };
         const result = executeToolCall(toolCall);
         toolResults.push(result);
 
-        // Add executed tool call with result to finalized content
-        finalizedContent.push({
-          type: 'tool_call',
-          toolCall,
-          result,
-        });
+        // Create a tool message for this result (chained to previous message)
+        const toolMessage = createToolMessage(tc.id, result.result, lastMessageId);
+        toolMessages.push(toolMessage);
+
+        // Update lastMessageId for next iteration
+        lastMessageId = toolMessage.id;
       }
 
-      // Update message with all finalized content
+      // Create a new assistant message for the continuation response (chained to last tool message)
+      const continuationMessage = createMessage('assistant', '', lastMessageId);
+
+      // Add all tool messages and continuation message in a single setState
       setState((prev) => {
         const conv = prev.conversations[conversation.id];
         if (!conv) return prev;
+
+        let updatedConv = conv;
+
+        // Add each tool message
+        for (const toolMessage of toolMessages) {
+          updatedConv = addMessage(updatedConv, toolMessage);
+        }
+
+        // Add continuation message
+        updatedConv = addMessage(updatedConv, continuationMessage);
 
         return {
           ...prev,
           conversations: {
             ...prev.conversations,
-            [conv.id]: updateMessage(conv, messageId, {
-              rawContent: allRawContent,
-              content: [...finalizedContent],
-            }),
+            [conv.id]: updatedConv,
           },
         };
       });
@@ -368,16 +396,13 @@ function App() {
         })),
       ];
 
-      // Reset streaming state for continuation (but keep finalizedContent!)
+      // Reset streaming state for continuation
       accumulatedToolCalls.clear();
       hasToolCalls = false;
       fullContent = '';
 
-      // Continue the conversation with tool results
-      await makeRequest(messagesWithTools);
-
-      // Final update - finalizedContent is preserved via updateMessageContent
-      updateMessageContent(fullContent, []);
+      // Continue the conversation with tool results, streaming into the new assistant message
+      await streamToMessage(messagesWithTools, continuationMessage.id);
     }
   };
 

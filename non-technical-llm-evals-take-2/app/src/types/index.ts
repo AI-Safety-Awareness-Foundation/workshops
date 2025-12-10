@@ -47,7 +47,7 @@ export type MessageContent = ThinkingContent | TextContent | ToolCallContent;
 
 export interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: MessageContent[];
   // Raw content string for display/editing
   rawContent: string;
@@ -57,6 +57,8 @@ export interface Message {
   childIds: string[];
   // Timestamp
   createdAt: number;
+  // For tool messages: the tool call ID this is responding to
+  toolCallId?: string;
 }
 
 // A conversation is a tree of messages

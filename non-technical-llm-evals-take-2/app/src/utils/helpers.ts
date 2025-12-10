@@ -40,6 +40,24 @@ export function createMessage(
   };
 }
 
+// Create a tool result message
+export function createToolMessage(
+  toolCallId: string,
+  result: string,
+  parentId: string | null = null
+): Message {
+  return {
+    id: generateId(),
+    role: 'tool',
+    content: [{ type: 'text', content: result }],
+    rawContent: result,
+    parentId,
+    childIds: [],
+    createdAt: Date.now(),
+    toolCallId,
+  };
+}
+
 // Get the active message path (from root to active leaf)
 export function getActivePath(conversation: Conversation): Message[] {
   if (!conversation.activeLeafId) return [];
@@ -159,39 +177,27 @@ export function conversationToPlainText(conversation: Conversation): string {
   }
 
   for (const message of path) {
-    const role = message.role.toUpperCase();
-    text += `[${role}]:\n`;
+    if (message.role === 'tool') {
+      // Tool result message
+      text += `[TOOL id="${message.toolCallId || ''}"]:\n`;
+      text += `${message.rawContent}\n\n`;
+    } else {
+      const role = message.role.toUpperCase();
+      text += `[${role}]:\n`;
 
-    // Collect tool calls to show tool results separately
-    const toolCalls: Array<{ name: string; id: string; arguments: string; result?: string }> = [];
-
-    for (const content of message.content) {
-      if (content.type === 'thinking') {
-        text += `<thinking>\n${content.content}\n</thinking>\n`;
-      } else if (content.type === 'text') {
-        text += `${content.content}\n`;
-      } else if (content.type === 'tool_call') {
-        text += `\n<tool_call id="${content.toolCall.id}" name="${content.toolCall.name}">\n`;
-        text += `${content.toolCall.arguments}\n`;
-        text += `</tool_call>\n`;
-
-        if (content.result) {
-          toolCalls.push({
-            name: content.toolCall.name,
-            id: content.toolCall.id,
-            arguments: content.toolCall.arguments,
-            result: content.result.result,
-          });
+      for (const content of message.content) {
+        if (content.type === 'thinking') {
+          text += `<thinking>\n${content.content}\n</thinking>\n`;
+        } else if (content.type === 'text') {
+          text += `${content.content}\n`;
+        } else if (content.type === 'tool_call') {
+          text += `\n<tool_call id="${content.toolCall.id}" name="${content.toolCall.name}">\n`;
+          text += `${content.toolCall.arguments}\n`;
+          text += `</tool_call>\n`;
         }
       }
-    }
 
-    text += '\n';
-
-    // Add tool results as separate messages (matching API format)
-    for (const tc of toolCalls) {
-      text += `[TOOL_RESULT id="${tc.id}"]:\n`;
-      text += `${tc.result}\n\n`;
+      text += '\n';
     }
   }
 
@@ -223,6 +229,13 @@ export function conversationToJSON(conversation: Conversation): string {
         role: 'user',
         content: message.rawContent,
       });
+    } else if (message.role === 'tool') {
+      // Tool result message
+      messages.push({
+        role: 'tool',
+        content: message.rawContent,
+        tool_call_id: message.toolCallId || '',
+      });
     } else if (message.role === 'assistant') {
       // Check if this message has tool calls
       const toolCallContents = message.content.filter(
@@ -232,8 +245,8 @@ export function conversationToJSON(conversation: Conversation): string {
       if (toolCallContents.length > 0) {
         // Assistant message with tool calls
         const textContent = message.content
-          .filter((c) => c.type === 'text')
-          .map((c) => (c as { type: 'text'; content: string }).content)
+          .filter((c) => c.type === 'text' || c.type === 'thinking')
+          .map((c) => (c as { content: string }).content)
           .join('');
 
         messages.push({
@@ -248,17 +261,6 @@ export function conversationToJSON(conversation: Conversation): string {
             },
           })),
         });
-
-        // Add tool result messages
-        for (const tc of toolCallContents) {
-          if (tc.result) {
-            messages.push({
-              role: 'tool',
-              content: tc.result.result,
-              tool_call_id: tc.toolCall.id,
-            });
-          }
-        }
       } else {
         // Regular assistant message
         messages.push({

@@ -114,12 +114,22 @@ function MessageComponent({
     }
   };
 
+  const getRoleLabel = () => {
+    switch (message.role) {
+      case 'user': return 'You';
+      case 'assistant': return 'Assistant';
+      case 'tool': return `Tool Result`;
+      case 'system': return 'System';
+      default: return message.role;
+    }
+  };
+
   if (isEditing) {
     return (
       <div className="message message-editing">
         <div className="message-header">
           <span className={`message-role ${message.role}`}>
-            {message.role === 'user' ? 'You' : 'Assistant'}
+            {getRoleLabel()}
           </span>
         </div>
         <textarea
@@ -155,22 +165,24 @@ function MessageComponent({
     <div className="message">
       <div className="message-header">
         <span className={`message-role ${message.role}`}>
-          {message.role === 'user' ? 'You' : 'Assistant'}
+          {getRoleLabel()}
         </span>
         {isStreaming && <span className="streaming-indicator" />}
-        <div className="message-actions">
-          <button className="message-action-btn" onClick={onStartEdit}>
-            Edit
-          </button>
-          {message.role === 'assistant' && (
-            <button
-              className="message-action-btn"
-              onClick={() => onContinue(message.rawContent)}
-            >
-              Continue
+        {message.role !== 'tool' && (
+          <div className="message-actions">
+            <button className="message-action-btn" onClick={onStartEdit}>
+              Edit
             </button>
-          )}
-        </div>
+            {message.role === 'assistant' && (
+              <button
+                className="message-action-btn"
+                onClick={() => onContinue(message.rawContent)}
+              >
+                Continue
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {branchInfo && (

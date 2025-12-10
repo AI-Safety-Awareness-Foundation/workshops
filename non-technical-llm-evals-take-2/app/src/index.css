@@ -228,6 +228,10 @@ body {
   color: var(--accent-color);
 }
 
+.message-role.tool {
+  color: var(--tool-border);
+}
+
 .message-actions {
   margin-left: auto;
   display: flex;
