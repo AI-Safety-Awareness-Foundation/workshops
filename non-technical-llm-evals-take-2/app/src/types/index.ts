@@ -13,6 +13,17 @@ export interface ConversationSettings {
   systemPrompt: string;
   thinkingTokenFormat: ThinkingTokenFormat;
   enabledTools: string[];
+  inbox: Email[];
+}
+
+// Email type for mock inbox
+export interface Email {
+  id: string;
+  from: string;
+  to: string;
+  subject: string;
+  timestamp: string;
+  body: string;
 }
 
 // Tool call types
@@ -93,6 +104,7 @@ export const DEFAULT_SETTINGS: ConversationSettings = {
   systemPrompt: 'You are a helpful assistant.',
   thinkingTokenFormat: 'inline-tags',
   enabledTools: ['calculator'],
+  inbox: [],
 };
 
 // Common OpenRouter models

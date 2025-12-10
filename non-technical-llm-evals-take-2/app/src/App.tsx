@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AppState, Conversation, MessageContent, ToolCall } from './types';
+import type { AppState, Conversation, MessageContent, ToolCall, Email } from './types';
 import {
   createConversation,
   createMessage,
@@ -13,11 +13,13 @@ import {
   parseInlineThinking,
 } from './utils/helpers';
 import { executeToolCall, getEnabledToolDefinitions } from './utils/tools';
+import type { ToolContext } from './utils/tools';
 import Sidebar from './components/Sidebar';
 import ChatView from './components/ChatView';
 import SettingsPanel from './components/SettingsPanel';
 import RawPanel from './components/RawPanel';
 import ToolsPanel from './components/ToolsPanel';
+import InboxEditorPanel from './components/InboxEditorPanel';
 
 function App() {
   const [state, setState] = useState<AppState>(() => {
@@ -28,6 +30,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showRawPanel, setShowRawPanel] = useState(false);
   const [showToolsPanel, setShowToolsPanel] = useState(false);
+  const [showInboxEditor, setShowInboxEditor] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
 
   // Save state to localStorage whenever it changes
@@ -351,9 +354,20 @@ function App() {
       const toolMessages: Array<ReturnType<typeof createToolMessage>> = [];
       let lastMessageId = messageId;
 
+      // Track sent emails for updating inbox
+      const sentEmails: Omit<Email, 'id'>[] = [];
+
+      // Create tool context for email tools
+      const toolContext: ToolContext = {
+        inbox: settings.inbox,
+        onSendEmail: (email) => {
+          sentEmails.push(email);
+        },
+      };
+
       for (const tc of toolCalls) {
         const toolCall: ToolCall = { id: tc.id, name: tc.name, arguments: tc.arguments };
-        const result = executeToolCall(toolCall);
+        const result = executeToolCall(toolCall, toolContext);
         toolResults.push(result);
 
         // Create a tool message for this result (chained to previous message)
@@ -381,6 +395,21 @@ function App() {
 
         // Add continuation message
         updatedConv = addMessage(updatedConv, continuationMessage);
+
+        // Add sent emails to inbox
+        if (sentEmails.length > 0) {
+          const newEmails: Email[] = sentEmails.map((email) => ({
+            ...email,
+            id: Math.random().toString(36).substring(2, 11),
+          }));
+          updatedConv = {
+            ...updatedConv,
+            settings: {
+              ...updatedConv.settings,
+              inbox: [...updatedConv.settings.inbox, ...newEmails],
+            },
+          };
+        }
 
         return {
           ...prev,
@@ -661,6 +690,23 @@ function App() {
             })
           }
           onClose={() => setShowToolsPanel(false)}
+          onShowInboxEditor={() => setShowInboxEditor(true)}
+        />
+      )}
+
+      {showInboxEditor && activeConversation && (
+        <InboxEditorPanel
+          inbox={activeConversation.settings.inbox}
+          onUpdate={(inbox) =>
+            handleUpdateConversation({
+              ...activeConversation,
+              settings: {
+                ...activeConversation.settings,
+                inbox,
+              },
+            })
+          }
+          onClose={() => setShowInboxEditor(false)}
         />
       )}
     </div>

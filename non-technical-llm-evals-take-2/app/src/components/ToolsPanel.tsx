@@ -5,9 +5,10 @@ interface ToolsPanelProps {
   settings: ConversationSettings;
   onUpdate: (settings: ConversationSettings) => void;
   onClose: () => void;
+  onShowInboxEditor: () => void;
 }
 
-function ToolsPanel({ settings, onUpdate, onClose }: ToolsPanelProps) {
+function ToolsPanel({ settings, onUpdate, onClose, onShowInboxEditor }: ToolsPanelProps) {
   const handleToggleTool = (toolId: string) => {
     const isEnabled = settings.enabledTools.includes(toolId);
     const newEnabledTools = isEnabled
@@ -65,6 +66,27 @@ function ToolsPanel({ settings, onUpdate, onClose }: ToolsPanelProps) {
             </div>
           );
         })}
+
+        <div style={{ borderTop: '1px solid var(--border-color)', marginTop: '16px', paddingTop: '16px' }}>
+          <div style={{ marginBottom: '8px', fontWeight: 500 }}>Email Inbox</div>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '12px' }}>
+            Configure the mock emails for the read_inbox and send_email tools.
+          </p>
+          <button
+            onClick={onShowInboxEditor}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              width: '100%',
+            }}
+          >
+            Edit Inbox ({settings.inbox.length} emails)
+          </button>
+        </div>
       </div>
     </div>
   );
