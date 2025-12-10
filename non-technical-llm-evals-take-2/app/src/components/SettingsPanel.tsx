@@ -65,35 +65,37 @@ function SettingsPanel({ settings, onUpdate, onClose }: SettingsPanelProps) {
           </div>
         )}
 
-        <div className="settings-section">
-          <label className="settings-label">Model</label>
-          <select
-            className="settings-select"
-            value={isCustomModel ? 'custom' : settings.model}
-            onChange={(e) => {
-              if (e.target.value !== 'custom') {
-                handleChange('model', e.target.value);
-              }
-            }}
-          >
-            {COMMON_MODELS.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))}
-            <option value="custom">Custom...</option>
-          </select>
-          {isCustomModel && (
-            <input
-              type="text"
-              className="settings-input"
-              value={settings.model}
-              onChange={(e) => handleChange('model', e.target.value)}
-              placeholder="Enter model ID"
-              style={{ marginTop: '8px' }}
-            />
-          )}
-        </div>
+        {settings.endpointType === 'openrouter' && (
+          <div className="settings-section">
+            <label className="settings-label">Model</label>
+            <select
+              className="settings-select"
+              value={isCustomModel ? 'custom' : settings.model}
+              onChange={(e) => {
+                if (e.target.value !== 'custom') {
+                  handleChange('model', e.target.value);
+                }
+              }}
+            >
+              {COMMON_MODELS.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+              <option value="custom">Custom...</option>
+            </select>
+            {isCustomModel && (
+              <input
+                type="text"
+                className="settings-input"
+                value={settings.model}
+                onChange={(e) => handleChange('model', e.target.value)}
+                placeholder="Enter model ID"
+                style={{ marginTop: '8px' }}
+              />
+            )}
+          </div>
+        )}
 
         <div className="settings-section">
           <label className="settings-label">Thinking Token Format</label>
