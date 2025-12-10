@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ConversationSettings, ThinkingTokenFormat, EndpointType } from '../types';
 import { COMMON_MODELS } from '../types';
 
@@ -15,7 +16,8 @@ function SettingsPanel({ settings, onUpdate, onClose }: SettingsPanelProps) {
     onUpdate({ ...settings, [key]: value });
   };
 
-  const isCustomModel = !COMMON_MODELS.some((m) => m.id === settings.model);
+  const isPresetModel = COMMON_MODELS.some((m) => m.id === settings.model);
+  const [showCustomInput, setShowCustomInput] = useState(!isPresetModel);
 
   return (
     <div className="settings-panel">
@@ -69,9 +71,12 @@ function SettingsPanel({ settings, onUpdate, onClose }: SettingsPanelProps) {
           <label className="settings-label">Model</label>
           <select
             className="settings-select"
-            value={isCustomModel ? 'custom' : settings.model}
+            value={showCustomInput ? 'custom' : (isPresetModel ? settings.model : 'custom')}
             onChange={(e) => {
-              if (e.target.value !== 'custom') {
+              if (e.target.value === 'custom') {
+                setShowCustomInput(true);
+              } else {
+                setShowCustomInput(false);
                 handleChange('model', e.target.value);
               }
             }}
@@ -83,7 +88,7 @@ function SettingsPanel({ settings, onUpdate, onClose }: SettingsPanelProps) {
             ))}
             <option value="custom">Custom...</option>
           </select>
-          {isCustomModel && (
+          {showCustomInput && (
             <input
               type="text"
               className="settings-input"
