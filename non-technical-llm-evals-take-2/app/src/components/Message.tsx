@@ -180,14 +180,12 @@ function MessageComponent({
           <button className="message-action-btn" onClick={onStartEdit}>
             Edit
           </button>
-          {message.role === 'assistant' && (
-            <button
-              className="message-action-btn"
-              onClick={() => onContinue(message.rawContent)}
-            >
-              Continue
-            </button>
-          )}
+          <button
+            className="message-action-btn"
+            onClick={() => onContinue(message.rawContent)}
+          >
+            Continue
+          </button>
         </div>
       </div>
 

@@ -511,6 +511,59 @@ function App() {
     [activeConversation, handleUpdateConversation]
   );
 
+  const handleContinueMessage = useCallback(
+    (messageId: string, prefill: string) => {
+      if (!activeConversation) return;
+
+      const originalMessage = activeConversation.messages[messageId];
+      if (!originalMessage) return;
+
+      // Create a new message of the same role with the prefill content
+      let newMessage;
+      if (originalMessage.role === 'tool') {
+        newMessage = createToolMessage(
+          originalMessage.toolCallId || '',
+          prefill,
+          originalMessage.parentId
+        );
+      } else {
+        newMessage = createMessage(
+          originalMessage.role,
+          prefill,
+          originalMessage.parentId
+        );
+      }
+
+      let updatedConversation = {
+        ...activeConversation,
+        messages: {
+          ...activeConversation.messages,
+          [newMessage.id]: newMessage,
+        },
+        activeLeafId: newMessage.id,
+        updatedAt: Date.now(),
+      };
+
+      // Update parent's childIds
+      if (originalMessage.parentId) {
+        const parent = activeConversation.messages[originalMessage.parentId];
+        updatedConversation.messages[originalMessage.parentId] = {
+          ...parent,
+          childIds: [...parent.childIds, newMessage.id],
+        };
+      }
+
+      handleUpdateConversation(updatedConversation);
+
+      // Stream continuation to this message
+      setIsStreaming(true);
+      streamResponse(updatedConversation, newMessage.id, prefill)
+        .catch(console.error)
+        .finally(() => setIsStreaming(false));
+    },
+    [activeConversation, handleUpdateConversation]
+  );
+
   const handleSwitchBranch = useCallback(
     (parentId: string, childIndex: number) => {
       if (!activeConversation) return;
@@ -553,6 +606,7 @@ function App() {
             isStreaming={isStreaming}
             onSendMessage={handleSendMessage}
             onEditMessage={handleEditMessage}
+            onContinueMessage={handleContinueMessage}
             onSwitchBranch={handleSwitchBranch}
             onShowSettings={() => setShowSettings(true)}
             onShowRaw={() => setShowRawPanel(true)}

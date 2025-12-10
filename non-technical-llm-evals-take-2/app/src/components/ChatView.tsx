@@ -8,6 +8,7 @@ interface ChatViewProps {
   isStreaming: boolean;
   onSendMessage: (content: string, prefill?: string) => void;
   onEditMessage: (messageId: string, newContent: string, regenerate: boolean) => void;
+  onContinueMessage: (messageId: string, prefill: string) => void;
   onSwitchBranch: (parentId: string, childIndex: number) => void;
   onShowSettings: () => void;
   onShowRaw: () => void;
@@ -18,6 +19,7 @@ function ChatView({
   isStreaming,
   onSendMessage,
   onEditMessage,
+  onContinueMessage,
   onSwitchBranch,
   onShowSettings,
   onShowRaw,
@@ -102,12 +104,7 @@ function ChatView({
                   setEditingMessageId(null);
                 }}
                 onContinue={(prefill) => {
-                  // For continuing from assistant message, we need to handle prefill
-                  if (message.role === 'assistant') {
-                    // Create a new user message to trigger continuation
-                    // This is a simplification - in reality we'd want to continue the same response
-                    onEditMessage(message.id, prefill, true);
-                  }
+                  onContinueMessage(message.id, prefill);
                 }}
                 onSwitchBranch={(index) => {
                   if (branchInfo) {
