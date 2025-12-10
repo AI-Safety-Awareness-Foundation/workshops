@@ -447,6 +447,54 @@ function App() {
         streamResponse(updatedConversation, newMessage.id, newContent)
           .catch(console.error)
           .finally(() => setIsStreaming(false));
+      } else if (regenerate && originalMessage.role === 'tool') {
+        // Create a new tool message branch with edited content
+        const newToolMessage = createToolMessage(
+          originalMessage.toolCallId || '',
+          newContent,
+          originalMessage.parentId
+        );
+
+        // Create a new assistant message as child of the tool message
+        const newAssistantMessage = createMessage(
+          'assistant',
+          '',
+          newToolMessage.id
+        );
+
+        let updatedConversation = {
+          ...activeConversation,
+          messages: {
+            ...activeConversation.messages,
+            [newToolMessage.id]: newToolMessage,
+            [newAssistantMessage.id]: newAssistantMessage,
+          },
+          activeLeafId: newAssistantMessage.id,
+          updatedAt: Date.now(),
+        };
+
+        // Update parent's childIds (add new tool message as sibling)
+        if (originalMessage.parentId) {
+          const parent = activeConversation.messages[originalMessage.parentId];
+          updatedConversation.messages[originalMessage.parentId] = {
+            ...parent,
+            childIds: [...parent.childIds, newToolMessage.id],
+          };
+        }
+
+        // Set the tool message's childIds to include the assistant message
+        updatedConversation.messages[newToolMessage.id] = {
+          ...newToolMessage,
+          childIds: [newAssistantMessage.id],
+        };
+
+        handleUpdateConversation(updatedConversation);
+
+        // Stream response to the new assistant message
+        setIsStreaming(true);
+        streamResponse(updatedConversation, newAssistantMessage.id)
+          .catch(console.error)
+          .finally(() => setIsStreaming(false));
       } else {
         // Just update the message content (for user messages or non-regenerate edits)
         const updatedConversation = updateMessage(

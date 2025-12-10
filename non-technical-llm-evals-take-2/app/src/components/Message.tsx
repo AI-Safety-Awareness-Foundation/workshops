@@ -153,6 +153,14 @@ function MessageComponent({
               Save & Continue
             </button>
           )}
+          {message.role === 'tool' && (
+            <button
+              className="edit-btn save"
+              onClick={() => onSaveEdit(editContent, true)}
+            >
+              Save & Regenerate
+            </button>
+          )}
           <button className="edit-btn cancel" onClick={onCancelEdit}>
             Cancel
           </button>
@@ -168,21 +176,19 @@ function MessageComponent({
           {getRoleLabel()}
         </span>
         {isStreaming && <span className="streaming-indicator" />}
-        {message.role !== 'tool' && (
-          <div className="message-actions">
-            <button className="message-action-btn" onClick={onStartEdit}>
-              Edit
+        <div className="message-actions">
+          <button className="message-action-btn" onClick={onStartEdit}>
+            Edit
+          </button>
+          {message.role === 'assistant' && (
+            <button
+              className="message-action-btn"
+              onClick={() => onContinue(message.rawContent)}
+            >
+              Continue
             </button>
-            {message.role === 'assistant' && (
-              <button
-                className="message-action-btn"
-                onClick={() => onContinue(message.rawContent)}
-              >
-                Continue
-              </button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {branchInfo && (
