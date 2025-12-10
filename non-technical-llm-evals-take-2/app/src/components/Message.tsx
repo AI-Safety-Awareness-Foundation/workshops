@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Message, MessageContent } from '../types';
 
 interface BranchInfo {
@@ -33,6 +33,11 @@ function MessageComponent({
   const [editContent, setEditContent] = useState(message.rawContent);
   const [expandedThinking, setExpandedThinking] = useState<Set<number>>(new Set());
   const [expandedTools, setExpandedTools] = useState<Set<number>>(new Set());
+
+  // Sync editContent when message changes (e.g., switching branches)
+  useEffect(() => {
+    setEditContent(message.rawContent);
+  }, [message.id, message.rawContent, isEditing]);
 
   const toggleThinking = (index: number) => {
     setExpandedThinking((prev) => {
@@ -153,7 +158,7 @@ function MessageComponent({
               Save & Continue
             </button>
           )}
-          {message.role === 'tool' && (
+          {(message.role === 'tool' || message.role === 'user') && (
             <button
               className="edit-btn save"
               onClick={() => onSaveEdit(editContent, true)}
@@ -212,6 +217,7 @@ function MessageComponent({
           </button>
         </div>
       )}
+
 
       <div className="message-content">
         {message.content.map((content, index) => renderContent(content, index))}

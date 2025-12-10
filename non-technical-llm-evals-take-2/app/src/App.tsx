@@ -155,6 +155,8 @@ function App() {
   ) => {
     const { settings } = conversation;
     const messages = getActivePath(conversation);
+    console.log('[streamResponse] Active path message IDs:', messages.map(m => ({ id: m.id, role: m.role, content: m.rawContent.substring(0, 50) })));
+    console.log('[streamResponse] Target messageId:', messageId);
 
     // Build messages array for API
     type ApiMessage = { role: string; content: string | null; tool_calls?: unknown[]; tool_call_id?: string };
@@ -185,6 +187,9 @@ function App() {
     const accumulatedToolCalls: Map<number, { id: string; name: string; arguments: string }> = new Map();
     let fullContent = prefill || '';
     let hasToolCalls = false;
+
+    console.log('[streamResponse] Starting with prefill:', prefill);
+    console.log('[streamResponse] apiMessages:', JSON.stringify(apiMessages, null, 2));
 
     // Helper to update a message's content
     const updateMessageContent = (targetMessageId: string, text: string, pendingToolCalls: Array<{ id: string; name: string; arguments: string }>) => {
@@ -269,6 +274,7 @@ function App() {
               const delta = choice?.delta?.content;
               if (delta) {
                 fullContent += delta;
+                console.log('[streamResponse] Delta received, fullContent now:', fullContent);
                 updateMessageContent(targetMessageId, fullContent, []);
               }
 
