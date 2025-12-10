@@ -162,29 +162,52 @@ export function conversationToPlainText(conversation: Conversation): string {
     const role = message.role.toUpperCase();
     text += `[${role}]:\n`;
 
+    // Collect tool calls to show tool results separately
+    const toolCalls: Array<{ name: string; id: string; arguments: string; result?: string }> = [];
+
     for (const content of message.content) {
       if (content.type === 'thinking') {
         text += `<thinking>\n${content.content}\n</thinking>\n`;
       } else if (content.type === 'text') {
         text += `${content.content}\n`;
       } else if (content.type === 'tool_call') {
-        text += `<tool_call name="${content.toolCall.name}">\n${content.toolCall.arguments}\n</tool_call>\n`;
+        text += `\n<tool_call id="${content.toolCall.id}" name="${content.toolCall.name}">\n`;
+        text += `${content.toolCall.arguments}\n`;
+        text += `</tool_call>\n`;
+
         if (content.result) {
-          text += `<tool_result>\n${content.result.result}\n</tool_result>\n`;
+          toolCalls.push({
+            name: content.toolCall.name,
+            id: content.toolCall.id,
+            arguments: content.toolCall.arguments,
+            result: content.result.result,
+          });
         }
       }
     }
 
     text += '\n';
+
+    // Add tool results as separate messages (matching API format)
+    for (const tc of toolCalls) {
+      text += `[TOOL_RESULT id="${tc.id}"]:\n`;
+      text += `${tc.result}\n\n`;
+    }
   }
 
   return text.trim();
 }
 
+// Type for API messages with tool calls
+type ApiMessage =
+  | { role: 'system' | 'user'; content: string }
+  | { role: 'assistant'; content: string | null; tool_calls?: Array<{ id: string; type: 'function'; function: { name: string; arguments: string } }> }
+  | { role: 'tool'; content: string; tool_call_id: string };
+
 // Generate JSON representation of conversation (API format)
 export function conversationToJSON(conversation: Conversation): string {
   const path = getActivePath(conversation);
-  const messages: Array<{ role: string; content: string }> = [];
+  const messages: ApiMessage[] = [];
 
   // Add system prompt
   if (conversation.settings.systemPrompt) {
@@ -195,10 +218,55 @@ export function conversationToJSON(conversation: Conversation): string {
   }
 
   for (const message of path) {
-    messages.push({
-      role: message.role,
-      content: message.rawContent,
-    });
+    if (message.role === 'user') {
+      messages.push({
+        role: 'user',
+        content: message.rawContent,
+      });
+    } else if (message.role === 'assistant') {
+      // Check if this message has tool calls
+      const toolCallContents = message.content.filter(
+        (c): c is Extract<typeof c, { type: 'tool_call' }> => c.type === 'tool_call'
+      );
+
+      if (toolCallContents.length > 0) {
+        // Assistant message with tool calls
+        const textContent = message.content
+          .filter((c) => c.type === 'text')
+          .map((c) => (c as { type: 'text'; content: string }).content)
+          .join('');
+
+        messages.push({
+          role: 'assistant',
+          content: textContent || null,
+          tool_calls: toolCallContents.map((tc) => ({
+            id: tc.toolCall.id,
+            type: 'function' as const,
+            function: {
+              name: tc.toolCall.name,
+              arguments: tc.toolCall.arguments,
+            },
+          })),
+        });
+
+        // Add tool result messages
+        for (const tc of toolCallContents) {
+          if (tc.result) {
+            messages.push({
+              role: 'tool',
+              content: tc.result.result,
+              tool_call_id: tc.toolCall.id,
+            });
+          }
+        }
+      } else {
+        // Regular assistant message
+        messages.push({
+          role: 'assistant',
+          content: message.rawContent,
+        });
+      }
+    }
   }
 
   return JSON.stringify(
