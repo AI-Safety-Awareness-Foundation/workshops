@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AppState, Conversation, MessageContent, ToolCall, Email } from './types';
+import type { AppState, Conversation, MessageContent, ToolCall } from './types';
 import {
   createConversation,
   createMessage,
@@ -20,6 +20,8 @@ import SettingsPanel from './components/SettingsPanel';
 import RawPanel from './components/RawPanel';
 import ToolsPanel from './components/ToolsPanel';
 import InboxEditorPanel from './components/InboxEditorPanel';
+import { ToastContainer } from './components/Toast';
+import type { ToastData } from './components/Toast';
 
 function App() {
   const [state, setState] = useState<AppState>(() => {
@@ -32,6 +34,20 @@ function App() {
   const [showToolsPanel, setShowToolsPanel] = useState(false);
   const [showInboxEditor, setShowInboxEditor] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [toasts, setToasts] = useState<ToastData[]>([]);
+
+  const addToast = useCallback((message: string, type: ToastData['type'] = 'info') => {
+    console.log('[addToast] called with:', message, type);
+    const id = Math.random().toString(36).substring(2, 11);
+    setToasts((prev) => {
+      console.log('[addToast] previous toasts:', prev, 'adding:', { id, message, type });
+      return [...prev, { id, message, type }];
+    });
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
@@ -292,6 +308,7 @@ function App() {
               // Handle tool calls
               const toolCallDeltas = choice?.delta?.tool_calls;
               if (toolCallDeltas) {
+                console.log('[streamResponse] Tool call deltas received:', toolCallDeltas);
                 hasToolCalls = true;
                 for (const tc of toolCallDeltas) {
                   const existing = accumulatedToolCalls.get(tc.index) || { id: '', name: '', arguments: '' };
@@ -313,26 +330,42 @@ function App() {
       }
     };
 
-    // Make initial request, streaming to the first assistant message
-    await streamToMessage(apiMessages, messageId, !!prefill);
+    // Create tool context for email tools (defined once, used for all tool executions)
+    const toolContext: ToolContext = {
+      inbox: settings.inbox,
+      onSendEmail: (email) => {
+        // Show toast notification for sent email
+        console.log('[onSendEmail] called with:', email);
+        addToast(`Email sent to ${email.to}\nSubject: ${email.subject}\n\n${email.body}`, 'info');
+      },
+    };
 
-    // If there were tool calls, execute them and continue
-    if (hasToolCalls && accumulatedToolCalls.size > 0) {
+    // Track current messages for API and current target message
+    let currentApiMessages = apiMessages;
+    let currentTargetMessageId = messageId;
+
+    // Make initial request
+    await streamToMessage(currentApiMessages, currentTargetMessageId, !!prefill);
+
+    // Loop to handle multiple rounds of tool calls
+    while (hasToolCalls && accumulatedToolCalls.size > 0) {
+      console.log('[streamResponse] After streaming - hasToolCalls:', hasToolCalls, 'accumulatedToolCalls size:', accumulatedToolCalls.size);
       const toolCalls = Array.from(accumulatedToolCalls.values());
+      console.log('[streamResponse] Executing tool calls:', toolCalls);
 
-      // Finalize the first assistant message with tool calls (including any thinking)
+      // Finalize the assistant message with tool calls (including any thinking)
       const contentBeforeTools: MessageContent[] =
         settings.thinkingTokenFormat === 'inline-tags'
           ? parseInlineThinking(fullContent)
           : fullContent ? [{ type: 'text' as const, content: fullContent }] : [];
 
-      // Add tool calls to the first assistant message
+      // Add tool calls to the assistant message
       const toolCallContent: MessageContent[] = toolCalls.map((tc) => ({
         type: 'tool_call' as const,
         toolCall: { id: tc.id, name: tc.name, arguments: tc.arguments },
       }));
 
-      // Update first assistant message
+      // Update assistant message
       setState((prev) => {
         const conv = prev.conversations[conversation.id];
         if (!conv) return prev;
@@ -341,7 +374,7 @@ function App() {
           ...prev,
           conversations: {
             ...prev.conversations,
-            [conv.id]: updateMessage(conv, messageId, {
+            [conv.id]: updateMessage(conv, currentTargetMessageId, {
               rawContent: fullContent,
               content: [...contentBeforeTools, ...toolCallContent],
             }),
@@ -352,18 +385,7 @@ function App() {
       // Execute tool calls and create tool messages
       const toolResults: Array<{ toolCallId: string; result: string }> = [];
       const toolMessages: Array<ReturnType<typeof createToolMessage>> = [];
-      let lastMessageId = messageId;
-
-      // Track sent emails for updating inbox
-      const sentEmails: Omit<Email, 'id'>[] = [];
-
-      // Create tool context for email tools
-      const toolContext: ToolContext = {
-        inbox: settings.inbox,
-        onSendEmail: (email) => {
-          sentEmails.push(email);
-        },
-      };
+      let lastMessageId = currentTargetMessageId;
 
       for (const tc of toolCalls) {
         const toolCall: ToolCall = { id: tc.id, name: tc.name, arguments: tc.arguments };
@@ -396,21 +418,6 @@ function App() {
         // Add continuation message
         updatedConv = addMessage(updatedConv, continuationMessage);
 
-        // Add sent emails to inbox
-        if (sentEmails.length > 0) {
-          const newEmails: Email[] = sentEmails.map((email) => ({
-            ...email,
-            id: Math.random().toString(36).substring(2, 11),
-          }));
-          updatedConv = {
-            ...updatedConv,
-            settings: {
-              ...updatedConv.settings,
-              inbox: [...updatedConv.settings.inbox, ...newEmails],
-            },
-          };
-        }
-
         return {
           ...prev,
           conversations: {
@@ -421,8 +428,8 @@ function App() {
       });
 
       // Build messages with tool call and results for continuation
-      const messagesWithTools: ApiMessage[] = [
-        ...apiMessages,
+      currentApiMessages = [
+        ...currentApiMessages,
         {
           role: 'assistant',
           content: fullContent || null,
@@ -439,13 +446,14 @@ function App() {
         })),
       ];
 
-      // Reset streaming state for continuation
+      // Reset streaming state for next iteration
       accumulatedToolCalls.clear();
       hasToolCalls = false;
       fullContent = '';
+      currentTargetMessageId = continuationMessage.id;
 
-      // Continue the conversation with tool results, streaming into the new assistant message
-      await streamToMessage(messagesWithTools, continuationMessage.id);
+      // Continue the conversation with tool results
+      await streamToMessage(currentApiMessages, currentTargetMessageId);
     }
   };
 
@@ -709,6 +717,8 @@ function App() {
           onClose={() => setShowInboxEditor(false)}
         />
       )}
+
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
