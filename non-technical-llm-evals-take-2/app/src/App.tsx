@@ -225,7 +225,7 @@ function App() {
     };
 
     // Helper to stream a request and update a specific message
-    const streamToMessage = async (msgs: ApiMessage[], targetMessageId: string): Promise<void> => {
+    const streamToMessage = async (msgs: ApiMessage[], targetMessageId: string, isContinue: boolean = false): Promise<void> => {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -241,6 +241,10 @@ function App() {
           messages: msgs,
           stream: true,
           tools: TOOL_DEFINITIONS,
+          ...(isContinue && {
+            continue_final_message: true,
+            add_generation_prompt: false,
+          }),
         }),
       });
 
@@ -303,7 +307,7 @@ function App() {
     };
 
     // Make initial request, streaming to the first assistant message
-    await streamToMessage(apiMessages, messageId);
+    await streamToMessage(apiMessages, messageId, !!prefill);
 
     // If there were tool calls, execute them and continue
     if (hasToolCalls && accumulatedToolCalls.size > 0) {
