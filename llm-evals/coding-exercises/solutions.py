@@ -1,16 +1,8 @@
 # %%
 
-# Quick demo of calling an LLM (potentially with a simplified wrapper)
+# Uncomment this if you're on Google Colab
+# %pip install inspectai
 
-# Specific arithmetic example
-# Show Inspect arithmetic example
-
-# Specific prefill jailbreak example
-# Show inspect prefill jailbreak example
-
-# Specific black mail example
-# Show inspect black mail example
-# Run ablations on black mail example
 
 # %% [markdown]
 """
@@ -36,6 +28,11 @@ from dataclasses import dataclass
 import os
 
 load_dotenv()
+
+# If in Google Colab
+# Use the following instead of getenv
+# from google.colab import userdata
+# OPENROUTER_KEY = userdata.get('OPENROUTER_KEY')
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -409,11 +406,11 @@ def calculator():
 ARITHMETIC_TOOL_SYSTEM_MESSAGE = \
   "You are a careful calculator with access to a `calculator` tool that performs \
   a single arithmetic operation (add, subtract, multiply, or divide) on two numbers \
-  at a time. Use the tool for every arithmetic step rather than computing in your head — \
+  at a time. Use the tool for every arithmetic step to help you calculate — \
   for multi-step problems, chain multiple tool calls together, feeding intermediate \
   results into the next call. Once you have the final result, respond with the final \
   numeric answer on a new line that itself ends in a newline in the form of \
-  \"ANSWER: $YOUR_ANSWER_HERE\" with a final newline. So for example if you are asked what 2 + 2 is, the \
+  \"ANSWER: $YOUR_ANSWER_HERE\" with a final newline. Feel free to double check answers as you see fit. So for example if you are asked what 2 + 2 is, the \
   very last line of your response should be \"ANSWER: 4\". There should be no other \
   words or units in that final line, just \"ANSWER: \" followed by a number. Make sure \
   not to add asterisks or anything else. For example, do NOT write \"**ANSWER: 4**\\n\"."
@@ -510,6 +507,17 @@ def print_trace(logs, sample_index: int | None = None):
 # %%
 
 print_trace(logs_arithmetic_with_tool)
+
+# %% [markdown]
+"""
+Let's do an exercise now where you mess up the calculator so that it always outputs egregiously wrong answers. E.g. maybe it always outputs 0. See how the LLM responds. How does this affect the accuracy of the LLM's responses.
+
+Play around with different LLMs and see if they have different reactions.
+"""
+
+# %%
+
+# Scratch space for messing with the calculator that the LLM has access to.
 
 # %% [markdown]
 """
