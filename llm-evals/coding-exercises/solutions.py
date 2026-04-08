@@ -1,14 +1,16 @@
 # %%
 
+# Quick demo of calling an LLM (potentially with a simplified wrapper)
+
 # Specific arithmetic example
 # Show Inspect arithmetic example
 
-# 
-# Quick demo of calling an LLM (potentially with a simplified wrapper)
-# Maybe talk about similarities/differences with thinking
-# 
-# Blackmail eval
-# Eval awareness
+# Specific prefill jailbreak example
+# Show inspect prefill jailbreak example
+
+# Specific black mail example
+# Show inspect black mail example
+# Run ablations on black mail example
 
 # %% [markdown]
 """
