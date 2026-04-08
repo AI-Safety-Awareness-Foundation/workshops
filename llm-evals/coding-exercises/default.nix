@@ -10,7 +10,6 @@ in pkgs.mkShell rec {
     pkgs.stdenv.cc.cc.lib
 
     git-crypt
-    # stdenv.cc.cc # jupyter lab needs
 
     # pythonPackages.python
     pythonPackages.ipykernel
@@ -54,6 +53,9 @@ in pkgs.mkShell rec {
     # Prepend venv site-packages to PYTHONPATH to prioritize venv packages over Nix packages
     # This ensures packages installed via pip (like typing_extensions 4.14.1) take precedence
     export PYTHONPATH="${venvDir}/lib/python3.13/site-packages:$PYTHONPATH"
+
+    # Make libstdc++ visible to pip-installed native extensions (e.g. pyzmq)
+    export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH"
   '';
 }
 
