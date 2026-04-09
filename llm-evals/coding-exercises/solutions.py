@@ -1,7 +1,7 @@
 # %%
 
 # Uncomment this if you're on Google Colab
-# %pip install inspectai
+# %pip install inspect_ai
 
 
 # %% [markdown]
