@@ -6,6 +6,7 @@ interface SidebarProps {
   onNewChat: () => void;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  isOpen: boolean;
 }
 
 function Sidebar({
@@ -14,9 +15,10 @@ function Sidebar({
   onNewChat,
   onSelect,
   onDelete,
+  isOpen,
 }: SidebarProps) {
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
         <button className="new-chat-btn" onClick={onNewChat}>
           + New Chat

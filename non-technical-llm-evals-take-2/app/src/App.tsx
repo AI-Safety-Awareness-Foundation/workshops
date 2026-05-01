@@ -35,6 +35,7 @@ function App() {
   const [showInboxEditor, setShowInboxEditor] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const addToast = useCallback((message: string, type: ToastData['type'] = 'info') => {
     console.log('[addToast] called with:', message, type);
@@ -635,14 +636,25 @@ function App() {
 
   return (
     <div className="app">
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
       <Sidebar
         conversations={Object.values(state.conversations).sort(
           (a, b) => b.updatedAt - a.updatedAt
         )}
         activeId={state.activeConversationId}
-        onNewChat={handleNewChat}
-        onSelect={handleSelectConversation}
+        onNewChat={() => {
+          handleNewChat();
+          setSidebarOpen(false);
+        }}
+        onSelect={(id) => {
+          handleSelectConversation(id);
+          setSidebarOpen(false);
+        }}
         onDelete={handleDeleteConversation}
+        isOpen={sidebarOpen}
       />
 
       <main className="main-content">
@@ -656,9 +668,16 @@ function App() {
             onShowSettings={() => setShowSettings(true)}
             onShowRaw={() => setShowRawPanel(true)}
             onShowTools={() => setShowToolsPanel(true)}
+            onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
           />
         ) : (
           <div className="empty-state">
+            <button
+              className="sidebar-toggle empty-state-toggle"
+              onClick={() => setSidebarOpen((prev) => !prev)}
+            >
+              &#9776;
+            </button>
             <h2>Welcome to ChatGPT Clone</h2>
             <p>Start a new conversation or select one from the sidebar.</p>
             <button className="new-chat-btn" onClick={handleNewChat}>

@@ -772,3 +772,140 @@ body {
 .toast-error .toast-icon {
   color: #ef4444;
 }
+
+/* Sidebar toggle button (hidden on desktop) */
+.sidebar-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.empty-state-toggle {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+/* Sidebar overlay (hidden on desktop) */
+.sidebar-overlay {
+  display: none;
+}
+
+/* Responsive: Tablets and smaller */
+@media (max-width: 768px) {
+  /* Sidebar becomes a slide-out drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Overlay behind sidebar */
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 199;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .sidebar-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Show hamburger menu */
+  .sidebar-toggle {
+    display: block;
+  }
+
+  /* Panels become full-width overlays */
+  .settings-panel,
+  .raw-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100% !important;
+    z-index: 150;
+  }
+
+  /* Toast adjustments */
+  .toast {
+    min-width: 0;
+    max-width: calc(100vw - 40px);
+  }
+
+  .toast-container {
+    left: 20px;
+    right: 20px;
+  }
+
+  /* Messages wrapper full width */
+  .messages-wrapper {
+    max-width: 100%;
+  }
+
+  /* Header actions: smaller buttons */
+  .chat-header-actions {
+    gap: 4px;
+  }
+
+  .header-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  /* Empty state needs relative positioning for the toggle */
+  .empty-state {
+    position: relative;
+  }
+}
+
+/* Responsive: Small phones */
+@media (max-width: 480px) {
+  .chat-header {
+    padding: 10px 12px;
+  }
+
+  .chat-header-title {
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .input-area {
+    padding: 12px 12px 16px;
+  }
+
+  .send-btn {
+    padding: 10px 14px;
+  }
+
+  .messages-wrapper {
+    padding: 0 12px;
+  }
+}

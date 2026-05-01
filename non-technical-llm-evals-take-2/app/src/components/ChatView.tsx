@@ -12,6 +12,7 @@ interface ChatViewProps {
   onShowSettings: () => void;
   onShowRaw: () => void;
   onShowTools: () => void;
+  onToggleSidebar: () => void;
 }
 
 function ChatView({
@@ -23,6 +24,7 @@ function ChatView({
   onShowSettings,
   onShowRaw,
   onShowTools,
+  onToggleSidebar,
 }: ChatViewProps) {
   const [input, setInput] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -75,6 +77,9 @@ function ChatView({
   return (
     <>
       <header className="chat-header">
+        <button className="sidebar-toggle" onClick={onToggleSidebar}>
+          &#9776;
+        </button>
         <span className="chat-header-title">{conversation.title}</span>
         <div className="chat-header-actions">
           <button className="header-btn" onClick={onShowRaw}>
