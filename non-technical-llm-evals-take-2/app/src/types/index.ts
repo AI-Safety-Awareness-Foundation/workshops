@@ -100,7 +100,7 @@ export const DEFAULT_SETTINGS: ConversationSettings = {
   endpointType: 'openrouter',
   apiKey: '',
   vllmUrl: 'http://localhost:8000',
-  model: 'anthropic/claude-3.5-sonnet',
+  model: 'anthropic/claude-sonnet-4.5',
   systemPrompt: 'You are a helpful assistant.',
   thinkingTokenFormat: 'inline-tags',
   enabledTools: ['calculator'],
@@ -109,12 +109,20 @@ export const DEFAULT_SETTINGS: ConversationSettings = {
 
 // Common OpenRouter models
 export const COMMON_MODELS = [
+  // Anthropic Claude
+  { id: 'anthropic/claude-opus-4.5', name: 'Claude Opus 4.5' },
+  { id: 'anthropic/claude-sonnet-4.5', name: 'Claude Sonnet 4.5' },
   { id: 'anthropic/claude-sonnet-4', name: 'Claude Sonnet 4' },
-  { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
-  { id: 'anthropic/claude-3.5-haiku', name: 'Claude 3.5 Haiku' },
-  { id: 'openai/gpt-4o', name: 'GPT-4o' },
-  { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini' },
-  { id: 'google/gemini-pro-1.5', name: 'Gemini Pro 1.5' },
+  // OpenAI GPT-5
+  { id: 'openai/gpt-5.1', name: 'GPT-5.1' },
+  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini' },
+  { id: 'openai/gpt-5-nano', name: 'GPT-5 Nano' },
+  { id: 'openai/gpt-5.1-codex', name: 'GPT-5.1 Codex' },
+  // Google Gemini
+  { id: 'google/gemini-3-pro-preview-20251117', name: 'Gemini 3 Pro' },
+  { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
+  { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+  // Other
   { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1' },
   { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B' },
 ];
