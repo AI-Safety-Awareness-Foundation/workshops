@@ -33,6 +33,7 @@ load_dotenv()
 # Use the following instead of getenv
 # from google.colab import userdata
 # OPENROUTER_KEY = userdata.get('OPENROUTER_KEY')
+# os.environ["OPENROUTER_API_KEY"] = OPENROUTER_KEY
 
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -172,7 +173,8 @@ samples = make_arithmetic_dataset(n=100, lower_limit=-1_000_000, upper_limit=1_0
 
 # %% [markdown]
 """
-Let's take a look at the dataset we've created.
+Let's take a look at the dataset we've created. Just do a quick sanity check
+here to verify that that the questions and answers make sense.
 """
 
 # %%
@@ -197,8 +199,13 @@ ARITHMETIC_SYSTEM_MESSAGE = \
   in the form of \"ANSWER: $YOUR_ANSWER_HERE\\n\". So for example if you are asked what 2 + 2 is, the very last line of your response should be \
   \"ANSWER: 4 \\n\". There should be no other words or units in that final line, just \"ANSWER: \" followed by a number. Make sure not to add asterisks or anything else. For example, do NOT write \"**ANSWER: 4**\n\"."
 
-# We first insert the system message and then we ask the LLM to generate the
-# rest of the answer
+# The way to read this is that we are making a solver for this task that first inserts a system message for the LLM and then asks the LLM to generate answers from there for each of the questions.
+#
+# That is, we first insert the system message and then we ask the LLM to
+# generate the rest of the answer.
+#
+# It's quite simple for these kinds of tasks. Solvers can get a bit more
+# complicated for tasks that are supposed to go back and forth multiple times.
 arithmetic_no_thinking_solver = [
   system_message(ARITHMETIC_SYSTEM_MESSAGE),
   generate(),
@@ -211,6 +218,9 @@ the answer produced by the LLM was correct. In this case what we'll use is
 `answer(pattern="line")` from Inspect. This looks for a pattern that looks like
 "ANSWER: 1289" as the very last line of what the LLM outputs and then compares
 1289 against the correct answer as determined by the dataset.
+
+We'll see examples later where we actually use another LLM as a scorer to score
+our original LLM.
 """
 
 # %%
