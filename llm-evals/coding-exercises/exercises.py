@@ -30,7 +30,7 @@ import os
 load_dotenv()
 
 # If in Google Colab
-# Use the following instead of getenv
+# Uncomment the following lines
 # from google.colab import userdata
 # OPENROUTER_KEY = userdata.get('OPENROUTER_KEY')
 # os.environ["OPENROUTER_API_KEY"] = OPENROUTER_KEY
