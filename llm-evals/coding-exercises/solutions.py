@@ -47,14 +47,15 @@ if not OPENROUTER_KEY.startswith("sk-"):
 
 # %% [markdown]
 """
-We'll OpenRouter for our evals exercise.OpenRouter is an aggregator over many different model providers such
-as OpenAI, Anthropic, Google DeepMind, etc. They are convenient to use because
-we can use a single API key to access all of these different models (and we also
-get much laxer API limits than if we were to use each of them individually).
-However, all the exercises we will cover today can be used independently against
-each model provider's API and the core APIs aren't very different among
-different model providers. It's just more convenient to use OpenRouter, which in
-turn is compatible with OpenAI's Python SDK, which is what we'll be using.
+We'll be using OpenRouter for our evals exercise. OpenRouter is an aggregator
+over many different model providers such as OpenAI, Anthropic, Google DeepMind,
+etc. They are convenient to use because we can use a single API key to access
+all of these different models (and we also get much laxer API limits than if we
+were to use each of them individually).  However, all the exercises we will
+cover today can be used independently against each model provider's API and the
+core APIs aren't very different among different model providers. It's just more
+convenient to use OpenRouter, which in turn is compatible with OpenAI's Python
+SDK, which is what we'll be using.
 """
 
 # %%
