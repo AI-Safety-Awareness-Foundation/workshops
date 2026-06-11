@@ -95,12 +95,14 @@ export interface AppState {
   activeConversationId: string | null;
 }
 
-// Default settings
+// Default settings. Deployment-specific values (notably apiKey) come from
+// config.json, which is gitignored and merged over these at startup — see
+// src/utils/config.ts and upload.sh.
 export const DEFAULT_SETTINGS: ConversationSettings = {
   endpointType: 'openrouter',
   apiKey: '',
   vllmUrl: 'http://localhost:8000',
-  model: 'anthropic/claude-sonnet-4.5',
+  model: 'google/gemini-3.1-pro-preview',
   systemPrompt: 'You are a helpful assistant.',
   thinkingTokenFormat: 'inline-tags',
   enabledTools: ['calculator'],
@@ -119,9 +121,9 @@ export const COMMON_MODELS = [
   { id: 'openai/gpt-5-nano', name: 'GPT-5 Nano' },
   { id: 'openai/gpt-5.1-codex', name: 'GPT-5.1 Codex' },
   // Google Gemini
-  { id: 'google/gemini-3-pro-preview-20251117', name: 'Gemini 3 Pro' },
-  { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
-  { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+  { id: 'google/gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro' },
+  { id: 'google/gemini-3.1-flash-image-preview', name: 'Gemini 3.1 Flash' },
+  { id: 'google/gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash Lite' },
   // Other
   { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1' },
   { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B' },

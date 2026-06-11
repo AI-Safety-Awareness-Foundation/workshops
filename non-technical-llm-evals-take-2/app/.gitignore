@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Deployed default settings overrides (uploaded by upload.sh, never committed)
+config.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

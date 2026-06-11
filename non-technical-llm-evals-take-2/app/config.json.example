@@ -1,0 +1,4 @@
+{
+  "apiKey": "sk-or-v1-your-key-here",
+  "model": "google/gemini-3.1-pro-preview"
+}
