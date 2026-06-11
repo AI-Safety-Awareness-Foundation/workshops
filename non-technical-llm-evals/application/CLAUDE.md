@@ -45,7 +45,7 @@ This is a manual LLM evaluation interface - a frontend-only TypeScript applicati
 
 - **Parallel Calls**: `LLMService.runParallelCalls()` uses Promise.all to run N model calls concurrently (configurable 1-50)
 - **Tool Use Loop**: Handles Anthropic's tool_use stop reason, executes mock tools synchronously, continues conversation with tool results
-- **API Key**: Stored in component state (session-only, never persisted to disk)
+- **API Key**: Stored in component state (session-only, never persisted to disk). On load, the app fetches `/config.json` (uploaded to the server by `upload.sh` from a gitignored root-level `config.json`, see `config.json.example`) and pre-fills the API key field with its `apiKey` value if present; users can still override it. The fetch fails silently in local dev.
 - **Mock Tools**: Implemented as TypeScript classes with in-memory state, tools include: read_file, write_file, list_directory, emailer
 - **Response Classification**:
   - `LLMService.classifyResponse()` makes separate LLM call per response with user-defined criteria

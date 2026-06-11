@@ -72,6 +72,7 @@ The first iteration of this application has been completed with the following fe
 - Conversation prefix builder (multi-turn conversation setup)
 - Parallel response grid display with tool call visibility
 - API key input (client-side only, session storage)
+- Default API key for all users via a deployed `config.json` (see Deployment below)
 - Model selection (Claude 3.5 Sonnet, Opus, Haiku)
 - Real-time progress tracking during parallel calls
 - **Automatic classification of responses as "good" or "bad"**:
@@ -100,3 +101,36 @@ npm run build
 ```
 
 See [USAGE.md](./USAGE.md) for detailed usage instructions and evaluation examples.
+
+## Deployment
+
+Deploys are done with a single script:
+
+```bash
+./upload.sh
+```
+
+This builds the app and rsyncs it to the hosting server, along with a
+`config.json` from the repo root (if present) that sets the default API key for
+all users:
+
+```bash
+cp config.json.example config.json
+# Edit config.json and paste in the real API key
+./upload.sh
+```
+
+On page load the app fetches `/config.json` and pre-fills the API key field
+with its `apiKey` value; users can still override it in the sidebar. To change
+the default key for everyone, edit `config.json` and re-run `./upload.sh` —
+the new key is picked up on the next page refresh.
+
+Notes:
+
+- `config.json` is gitignored so real keys never land in the repo. Keys are
+  expected to be short-lived and price-capped, since anyone using the site can
+  see the default key.
+- If you run `./upload.sh` without a local `config.json`, the script warns and
+  deploys anyway; whatever `config.json` is already on the server stays active.
+- In local development (`npm run dev`) no `config.json` is served, so the API
+  key field starts empty and you paste a key manually.

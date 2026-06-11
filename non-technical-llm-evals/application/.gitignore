@@ -17,6 +17,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Deployed default API key (uploaded by upload.sh, never committed)
+config.json
+
 # Environment variables
 .env
 .env.local

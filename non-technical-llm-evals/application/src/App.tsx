@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ConfigPanel } from './components/ConfigPanel';
 import { ConversationView } from './components/ConversationView';
 import { ResponseGrid } from './components/ResponseGrid';
@@ -23,6 +23,19 @@ function App() {
   const [progress, setProgress] = useState<{ completed: number; total: number } | undefined>();
 
   const llmServiceRef = useRef(new LLMService());
+
+  // Pre-fill the API key from the deployed config.json (uploaded by upload.sh,
+  // not part of the build). Absent in local dev, where the fetch just fails.
+  useEffect(() => {
+    fetch('/config.json', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data.apiKey === 'string' && data.apiKey) {
+          setConfig((prev) => (prev.apiKey ? prev : { ...prev, apiKey: data.apiKey }));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSendMessage = async (messageContent: string) => {
     if (!config.apiKey) {
