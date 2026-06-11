@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
+# LLM Evals Chat Playground
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based chat interface for the non-technical LLM evals workshop. It looks like a ChatGPT-style app, but exposes the knobs that workshop participants need to poke at model behavior directly: system prompts, prefilled assistant responses, editable messages (including tool results), conversation branching, and a mock email inbox for agentic scenarios.
 
-Currently, two official plugins are available:
+Built with React + TypeScript + Vite. All state lives in the browser's localStorage; there is no backend — API calls go straight from the browser to the model provider.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- **Endpoints**: OpenRouter (default) or a self-hosted vLLM server, configurable per conversation along with model, API key, and system prompt.
+- **Branching conversations**: editing a user, assistant, or tool message creates a new branch; you can switch between branches at any point in the tree.
+- **Prefill**: start an assistant response with text of your choosing and let the model continue from it.
+- **Thinking tokens**: parses `<think>...</think>` blocks inline and renders them as collapsible thinking sections.
+- **Tools**: calculator, read-inbox, and send-email (mock) tools the model can call. The inbox is editable per conversation via the inbox editor, and "sent" emails appear as toast notifications.
+- **Raw view**: see the conversation as plain text or as the JSON request that would be sent to the API.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Development
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Default settings and config.json
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Built-in defaults live in `DEFAULT_SETTINGS` in `src/types/index.ts`. At startup the app fetches `/config.json` and merges any keys it contains over those defaults (see `src/utils/config.ts`), so new conversations pick up the deployed values — most importantly the OpenRouter API key, which is intentionally not committed.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+`config.json` is gitignored. To set up local overrides:
+
+```bash
+cp config.json.example config.json
+# then edit config.json and fill in the API key
 ```
+
+Any subset of the `ConversationSettings` fields (`apiKey`, `model`, `endpointType`, `systemPrompt`, ...) may be included. Note that whatever you put in `config.json` is served publicly by the deployed site, so only use keys you are willing to expose to workshop participants.
+
+## Deployment
+
+```bash
+./upload.sh
+```
+
+This builds the app and rsyncs `dist/` to the NearlyFreeSpeech host, then uploads `config.json` alongside it if present. If `config.json` is missing it warns and deploys without it, leaving whatever `config.json` is already on the server (if any) in place.
