@@ -1,3 +1,6 @@
 .venv
 mnist_model_hidden_layer_*
 data
+
+.vscode
+.ipynb_checkpoints
