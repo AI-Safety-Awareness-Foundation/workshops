@@ -40,3 +40,43 @@ Any subset of the `ConversationSettings` fields (`apiKey`, `model`, `endpointTyp
 ```
 
 This builds the app and rsyncs `dist/` to the NearlyFreeSpeech host, then uploads `config.json` alongside it if present. If `config.json` is missing it warns and deploys without it, leaving whatever `config.json` is already on the server (if any) in place.
+
+## Changing the default API key
+
+The API key that the deployed site hands out to participants lives in exactly one place: the `"apiKey"` field of `config.json` in this folder (not in the source code — `DEFAULT_SETTINGS` in `src/types/index.ts` deliberately has an empty key).
+
+1. Edit `config.json` (create it first with `cp config.json.example config.json` if it doesn't exist) and set the new key:
+
+   ```json
+   {
+     "apiKey": "sk-or-v1-..."
+   }
+   ```
+
+2. Run the deploy script from this folder:
+
+   ```bash
+   ./upload.sh
+   ```
+
+   This uploads the new `config.json` to the server. Reload the deployed site to confirm; note that existing conversations keep the settings they were created with, so test with a fresh "New Chat".
+
+### SSH key setup (needed for upload.sh)
+
+`upload.sh` rsyncs over SSH to `tarospec_aisap-test-website@ssh.nyc1.nearlyfreespeech.net`. If you get a permission/password prompt that fails, set up an SSH key:
+
+1. Generate a key if you don't already have one (`ls ~/.ssh/*.pub` to check):
+
+   ```bash
+   ssh-keygen -t ed25519
+   ```
+
+2. Authorize it on NearlyFreeSpeech, either of:
+   - Log in to the NearlyFreeSpeech member interface, go to **Profile → Add SSH Key**, and paste the contents of `~/.ssh/id_ed25519.pub`; or
+   - If password SSH login works for the site, run:
+
+     ```bash
+     ssh-copy-id tarospec_aisap-test-website@ssh.nyc1.nearlyfreespeech.net
+     ```
+
+3. Verify with `ssh tarospec_aisap-test-website@ssh.nyc1.nearlyfreespeech.net true` — if that succeeds without a password prompt, `./upload.sh` will work.
